@@ -195,13 +195,7 @@ class BulkSaveNewMessages extends AsyncTask<List<dynamic>, List<Message>> {
       }
 
       // 10. Save the updated associated messages
-      if (messagesToUpdate.isNotEmpty) {
-        try {
-          Database.messages.putMany(messagesToUpdate.values.toList());
-        } catch (ex) {
-          print('Failed to put associated messages into DB: ${ex.toString()}');
-        }
-      }
+      saveUpdatedAssociatedMessages(messagesToUpdate);
 
       // 11. Update the associated chat's last message
       messages.sort(Message.sort);
@@ -224,6 +218,17 @@ class BulkSaveNewMessages extends AsyncTask<List<dynamic>, List<Message>> {
 
       return messages;
     });
+  }
+}
+
+/// Saves [messagesToUpdate] to the database, logging any failures.
+void saveUpdatedAssociatedMessages(Map<String, Message> messagesToUpdate) {
+  if (messagesToUpdate.isNotEmpty) {
+    try {
+      Database.messages.putMany(messagesToUpdate.values.toList());
+    } catch (ex, stacktrace) {
+      Logger.error('Failed to put associated messages into DB!', error: ex, trace: stacktrace);
+    }
   }
 }
 
