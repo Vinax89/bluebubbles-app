@@ -31,23 +31,23 @@ Once you have a code editor installed, remember to install all of the required p
 In order to start contributing, follow these steps:
 
 1. Create a GitHub account
-2. Fork the `BlueBubbles-Android-App` repository: [here](https://github.com/BlueBubblesApp/BlueBubbles-Android-App)
-    * Click the fork button at the top right of your brwoser
+2. Fork the `bluebubbles-app` repository: [here](https://github.com/BlueBubblesApp/bluebubbles-app)
+    * Click the fork button at the top right of your browser
 3. On your projects folder (or any preferred folder), clone your forked repository:
-    * HTTPS: `git clone https://github.com/BlueBubblesApp/BlueBubbles-Android-App.git`
-    * SSH: `git clone git@github.com:BlueBubblesApp/BlueBubbles-Android-App.git`
+    * HTTPS: `git clone https://github.com/BlueBubblesApp/bluebubbles-app.git`
+    * SSH: `git clone git@github.com:BlueBubblesApp/bluebubbles-app.git`
 4. Set the upstream to our main repo (this will allow you to pull official changes)
-    * `git remote add upstream git@github.com:BlueBubblesApp/BlueBubbles-Android-App.git`
+    * `git remote add upstream https://github.com/BlueBubblesApp/bluebubbles-app.git`
 5. Fetch all the required branches/code
     * `git fetch`
     * `git fetch upstream`
 6. Pull the latest changes, or a specific branch you want to start from
-    * Pull code from the main repository's master branch: `git pull upstream master`
+    * Pull code from the main repository's development branch: `git pull upstream development`
     * Checkout a specific branch: `git checkout upstream <name of branch>`
 
 ## Picking an Issue
 
-If you are working on something that does not have an issue created for it yet, please create an issue for it so we can easily track it. Otherwise, check out our issues page [here](https://github.com/BlueBubblesApp/BlueBubbles-Android-App/issues), and here are some tips:
+If you are working on something that does not have an issue created for it yet, please create an issue for it so we can easily track it. Otherwise, check out our issues page [here](https://github.com/BlueBubblesApp/bluebubbles-app/issues), and here are some tips:
 
 * I have labelled issues by difficulty. You can add `label:"Difficulty: Easy"` to the query to filter. The options are Easy, Medium, or Hard.
     - Some issues have 2 Difficulty labels. This just means they are somewhere in between the two difficulties.
@@ -76,14 +76,14 @@ When you are ready to work on the code, follow these steps.
 Once you have made all your changes, follow these instructions:
 
 1. Login to GitHub's website
-2. Go to your forked `BlueBubbles-Android-App` repository
+2. Go to your forked `bluebubbles-app` repository
 3. Go to the `Pull requests` tab
 4. Create a new Pull request, merging your changes into the main `development` branch
 5. Please include the following information with your pull request:
     * The problem
     * What your code solves
     * How you fixed it
-6. Once submitted, your changes will be reviewed, and hopefully committed into the master branch!
+6. Once submitted, your changes will be reviewed, and hopefully committed into the development branch!
 
 ## Getting GIF Keyboard Support
 
