@@ -206,14 +206,14 @@ class _TroubleshootPanelState extends OptimizedState<TroubleshootPanel> {
 
                           try {
                             showSnackbar("Please Wait", "Compressing ${logFileCount.value} log file(s)...");
-                            String filePath = Logger.compressLogs();
+                            String filePath = await Logger.compressLogs();
                             final File zippedLogFile = File(filePath);
 
                             // Copy the file to downloads
                             String newPath = await fs.saveToDownloads(zippedLogFile);
 
                             // Delete the original file
-                            zippedLogFile.deleteSync();
+                            await zippedLogFile.delete();
 
                             // Let the user know what happened
                             showSnackbar(
@@ -258,7 +258,7 @@ class _TroubleshootPanelState extends OptimizedState<TroubleshootPanel> {
                       title: "Clear Logs",
                       subtitle: "Deletes all stored log files.",
                       onTap: () async {
-                        Logger.clearLogs();
+                        await Logger.clearLogs();
                         showSnackbar(
                             "Logs Cleared", "All logs have been deleted.");
                         logFileCount.value = 0;
