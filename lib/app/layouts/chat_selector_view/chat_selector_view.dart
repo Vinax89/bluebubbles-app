@@ -6,6 +6,7 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/app/layouts/chat_selector_view/search_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -34,6 +35,9 @@ class ChatSelectorViewState extends OptimizedState<ChatSelectorView> {
   List<Chat> filteredChats = [];
   String? oldSearch;
   Timer? _debounce;
+  String? senderFilter;
+  DateTimeRange? dateRangeFilter;
+  String? attachmentFilter;
 
   @override
   void initState() {
@@ -132,6 +136,12 @@ class ChatSelectorViewState extends OptimizedState<ChatSelectorView> {
                       ),
                       filled: false),
                 ),
+              ),
+              const SizedBox(height: 10),
+              ChatSearchPanel(
+                onSenderChanged: (s) => senderFilter = s,
+                onDateRangeChanged: (r) => dateRangeFilter = r,
+                onAttachmentChanged: (t) => attachmentFilter = t,
               ),
               Expanded(
                 child: Obx(() {

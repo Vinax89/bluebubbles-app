@@ -89,7 +89,7 @@
     },
     {
       "id": "3:9017250848141753702",
-      "lastPropertyId": "28:3841196368520260614",
+      "lastPropertyId": "29:1470241693312285363",
       "name": "Chat",
       "properties": [
         {
@@ -204,6 +204,13 @@
           "id": "28:3841196368520260614",
           "name": "lastReadMessageGuid",
           "type": 9
+        },
+        {
+          "id": "29:1470241693312285363",
+          "name": "fullText",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "17:8525126353005467357"
         }
       ],
       "relations": [
@@ -381,7 +388,7 @@
     },
     {
       "id": "13:4148278195232901830",
-      "lastPropertyId": "51:6421366235089828344",
+      "lastPropertyId": "52:1840671467277910017",
       "name": "Message",
       "properties": [
         {
@@ -596,6 +603,13 @@
           "id": "51:6421366235089828344",
           "name": "isPinned",
           "type": 1
+        },
+        {
+          "id": "52:1840671467277910017",
+          "name": "fullText",
+          "type": 9,
+          "flags": 2080,
+          "indexId": "18:5074771669273068157"
         }
       ],
       "relations": []
@@ -730,7 +744,7 @@
     }
   ],
   "lastEntityId": "17:2547083341603323785",
-  "lastIndexId": "16:6243763364531768800",
+  "lastIndexId": "18:5074771669273068157",
   "lastRelationId": "1:7492985733214117623",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
