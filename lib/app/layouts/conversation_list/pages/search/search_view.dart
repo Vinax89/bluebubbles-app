@@ -60,6 +60,10 @@ class SearchViewState extends OptimizedState<SearchView> {
   bool isFromMe = false;
   bool isNotFromMe = false;
   DateTime? sinceDate;
+  bool filterPhotos = false;
+  bool filterLinks = false;
+  bool filterDocuments = false;
+  final RegExp linkRegex = RegExp(r'https?://');
 
   Color get backgroundColor => ss.settings.windowEffect.value == WindowEffect.disabled
       ? context.theme.colorScheme.background
@@ -75,6 +79,9 @@ class SearchViewState extends OptimizedState<SearchView> {
         noResults = false;
       }
     });
+    filterPhotos = ss.prefs.getBool('search-filter-photos') ?? false;
+    filterLinks = ss.prefs.getBool('search-filter-links') ?? false;
+    filterDocuments = ss.prefs.getBool('search-filter-docs') ?? false;
   }
 
   Future<void> search(String newSearch) async {
@@ -123,10 +130,36 @@ class SearchViewState extends OptimizedState<SearchView> {
         condition = condition.and(Message_.dateCreated.greaterOrEqual(sinceDate!.millisecondsSinceEpoch));
       }
 
+      if (filterLinks) {
+        condition = condition.and(Message_.text.contains('://', caseSensitive: false));
+      }
+
+      if (filterPhotos || filterDocuments) {
+        condition = condition.and(Message_.hasAttachments.equals(true));
+      }
+
       QueryBuilder<Message> qBuilder = Database.messages.query(condition);
 
       if (selectedChat != null) {
         qBuilder = qBuilder..link(Message_.chat, Chat_.guid.equals(selectedChat!.guid));
+      }
+
+      if (filterPhotos || filterDocuments) {
+        final List<obx.Condition<Attachment>> attachConds = [];
+        if (filterPhotos) {
+          attachConds.add(Attachment_.mimeType.contains('image', caseSensitive: false));
+        }
+        if (filterDocuments) {
+          attachConds.add(Attachment_.mimeType.contains('application', caseSensitive: false)
+              .or(Attachment_.mimeType.contains('text', caseSensitive: false)));
+        }
+        if (attachConds.isNotEmpty) {
+          obx.Condition<Attachment> attachCond = attachConds.first;
+          for (final c in attachConds.skip(1)) {
+            attachCond = attachCond.or(c);
+          }
+          qBuilder = qBuilder.link(Message_.dbAttachments, attachCond);
+        }
       }
 
       final query = qBuilder.order(Message_.dateCreated, flags: Order.descending).build();
@@ -203,8 +236,31 @@ class SearchViewState extends OptimizedState<SearchView> {
       final dbChats = Database.chats.query(Chat_.guid.oneOf(chatsToGet)).build().find();
       for (int i = 0; i < items.item1.length; i++) {
         final chat = dbChats.firstWhereOrNull((e) => e.guid == items.item1[i].guid) ?? items.item1[i];
-        chat.latestMessage = items.item2[i];
-        search.results.add(Tuple2(chat, items.item2[i]));
+        final message = items.item2[i];
+        bool matches = true;
+        if (filterLinks) {
+          matches = matches && linkRegex.hasMatch(message.fullText);
+        }
+        if (matches && (filterPhotos || filterDocuments)) {
+          if (!message.hasAttachments) {
+            matches = false;
+          } else {
+            bool photo = filterPhotos &&
+                message.attachments.any((a) => a?.mimeType?.contains('image') ?? false);
+            bool doc = filterDocuments &&
+                message.attachments.any((a) {
+                  final mime = a?.mimeType ?? '';
+                  return mime.contains('application') || mime.contains('text');
+                });
+            if (!(photo || doc)) {
+              matches = false;
+            }
+          }
+        }
+        if (matches) {
+          chat.latestMessage = message;
+          search.results.add(Tuple2(chat, message));
+        }
       }
     }
 
@@ -224,6 +280,9 @@ class SearchViewState extends OptimizedState<SearchView> {
     if (isFromMe) filterCount++;
     if (isNotFromMe) filterCount++;
     if (sinceDate != null) filterCount++;
+    if (filterPhotos) filterCount++;
+    if (filterLinks) filterCount++;
+    if (filterDocuments) filterCount++;
 
     bool showSenderFilter = !isNotFromMe && !isFromMe && (selectedChat?.isGroup ?? true);
 
@@ -485,6 +544,21 @@ class SearchViewState extends OptimizedState<SearchView> {
                         spans.add(TextSpan(text: message.text, style: subtitleStyle));
                       }
 
+                      Icon? typeIcon;
+                      if (message.hasAttachments) {
+                        if (message.attachments.any((a) => a?.mimeType?.contains('image') ?? false)) {
+                          typeIcon = Icon(Icons.photo, color: context.theme.colorScheme.primary);
+                        } else if (message.attachments.any((a) {
+                          final mime = a?.mimeType ?? '';
+                          return mime.contains('application') || mime.contains('text');
+                        })) {
+                          typeIcon = Icon(Icons.insert_drive_file_outlined, color: context.theme.colorScheme.primary);
+                        }
+                      }
+                      if (linkRegex.hasMatch(message.fullText)) {
+                        typeIcon = Icon(Icons.link, color: context.theme.colorScheme.primary);
+                      }
+
                       return Container(
                         decoration: BoxDecoration(
                           border: !ss.settings.hideDividers.value
@@ -523,11 +597,21 @@ class SearchViewState extends OptimizedState<SearchView> {
                             size: 40,
                             editable: false,
                           ),
-                          trailing: Text(
-                            buildDate(message.dateCreated),
-                            textAlign: TextAlign.right,
-                            style: context.theme.textTheme.bodySmall,
-                            overflow: TextOverflow.clip,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (typeIcon != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: typeIcon,
+                                ),
+                              Text(
+                                buildDate(message.dateCreated),
+                                textAlign: TextAlign.right,
+                                style: context.theme.textTheme.bodySmall,
+                                overflow: TextOverflow.clip,
+                              ),
+                            ],
                           ),
                           onTap: () {
                             final service = ms(chat.guid);
@@ -785,6 +869,72 @@ class SearchViewState extends OptimizedState<SearchView> {
                                     });
                                   },
                                 ),
+                              RawChip(
+                                tapEnabled: true,
+                                showCheckmark: true,
+                                selected: filterPhotos,
+                                checkmarkColor: context.theme.colorScheme.primary,
+                                side: BorderSide(color: context.theme.colorScheme.outline.withOpacity(0.1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                label: Text('Photos',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                        color: context.theme.colorScheme.onSurface)),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    filterPhotos = selected;
+                                    ss.prefs.setBool('search-filter-photos', filterPhotos);
+                                    isSearching = false;
+                                    noResults = false;
+                                    currentSearch = null;
+                                  });
+                                },
+                              ),
+                              RawChip(
+                                tapEnabled: true,
+                                showCheckmark: true,
+                                selected: filterLinks,
+                                checkmarkColor: context.theme.colorScheme.primary,
+                                side: BorderSide(color: context.theme.colorScheme.outline.withOpacity(0.1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                label: Text('Links',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                        color: context.theme.colorScheme.onSurface)),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    filterLinks = selected;
+                                    ss.prefs.setBool('search-filter-links', filterLinks);
+                                    isSearching = false;
+                                    noResults = false;
+                                    currentSearch = null;
+                                  });
+                                },
+                              ),
+                              RawChip(
+                                tapEnabled: true,
+                                showCheckmark: true,
+                                selected: filterDocuments,
+                                checkmarkColor: context.theme.colorScheme.primary,
+                                side: BorderSide(color: context.theme.colorScheme.outline.withOpacity(0.1)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                label: Text('Documents',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                        color: context.theme.colorScheme.onSurface)),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    filterDocuments = selected;
+                                    ss.prefs.setBool('search-filter-docs', filterDocuments);
+                                    isSearching = false;
+                                    noResults = false;
+                                    currentSearch = null;
+                                  });
+                                },
+                              ),
                             ],
                           ))),
                 ]),
