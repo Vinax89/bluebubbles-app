@@ -21,6 +21,9 @@ import 'package:tuple/tuple.dart';
 import 'package:universal_io/io.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+@visibleForTesting
+Future<bool> Function(Uri url, {LaunchMode mode}) launchFaceTimeUrl = launchUrl;
+
 IntentsService intents = Get.isRegistered<IntentsService>() ? Get.find<IntentsService>() : Get.put(IntentsService());
 
 class IntentsService extends GetxService {
@@ -151,9 +154,13 @@ class IntentsService extends GetxService {
     }
 
     if (!kIsWeb) {
-      await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+      await launchFaceTimeUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
     } else if (kIsWeb) {
-      // TODO: Implement web FaceTime
+      final uri = Uri.parse(link);
+      final didLaunch = await launchFaceTimeUrl(uri, mode: LaunchMode.platformDefault);
+      if (!didLaunch) {
+        showSnackbar("Failed to open FaceTime link", "Unable to open browser");
+      }
     }
   }
 
