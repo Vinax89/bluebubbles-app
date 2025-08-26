@@ -278,8 +278,16 @@ class HttpService extends GetxService {
     });
   }
 
-  /// Get the attachment data for the specified [guid]
-  Future<Response> downloadAttachment(String guid, {void Function(int, int)? onReceiveProgress, bool original = false, CancelToken? cancelToken}) async {
+  /// Get the attachment data for the specified [guid].
+  ///
+  /// The [original] flag determines whether the server should return the
+  /// full-resolution, uncompressed version of the attachment rather than any
+  /// optimized variant that may normally be served. This is useful when the
+  /// client explicitly requests the exact file that was sent.
+  Future<Response> downloadAttachment(String guid,
+      {void Function(int, int)? onReceiveProgress,
+      bool original = false,
+      CancelToken? cancelToken}) async {
     return runApiGuarded(() async {
       final response = await dio.get(
           "$apiRoot/attachment/$guid/download",
@@ -290,6 +298,17 @@ class HttpService extends GetxService {
       );
       return returnSuccessOrError(response);
     });
+  }
+
+  /// Convenience helper for [downloadAttachment] that always requests the
+  /// original attachment data.
+  Future<Response> downloadAttachmentOriginal(String guid,
+      {void Function(int, int)? onReceiveProgress,
+      CancelToken? cancelToken}) async {
+    return downloadAttachment(guid,
+        onReceiveProgress: onReceiveProgress,
+        original: true,
+        cancelToken: cancelToken);
   }
 
   /// Get the live photo data for the specified [guid]

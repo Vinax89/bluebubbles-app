@@ -260,7 +260,14 @@ class AttachmentsService extends GetxService {
     }
   }
 
-  Future<void> redownloadAttachment(Attachment attachment, {Function(PlatformFile)? onComplete, Function()? onError}) async {
+  /// Delete any existing local copies and download the attachment again.
+  ///
+  /// When [original] is set to `true`, the uncompressed version of the
+  /// attachment will be downloaded from the server.
+  Future<void> redownloadAttachment(Attachment attachment,
+      {Function(PlatformFile)? onComplete,
+      Function()? onError,
+      bool original = false}) async {
     if (!kIsWeb) {
       final file = File(attachment.path);
       final pngFile = File(attachment.convertedPath);
@@ -275,11 +282,14 @@ class AttachmentsService extends GetxService {
       } catch(_) {}
     }
 
-    Get.put(AttachmentDownloadController(
-        attachment: attachment,
-        onComplete: (file) => onComplete?.call(file),
-        onError: onError
-    ), tag: attachment.guid);
+    Get.put(
+        AttachmentDownloadController(
+          attachment: attachment,
+          onComplete: (file) => onComplete?.call(file),
+          onError: onError,
+          original: original,
+        ),
+        tag: attachment.guid);
   }
 
   Future<Size> getImageSizing(String filePath, Attachment attachment) async {
