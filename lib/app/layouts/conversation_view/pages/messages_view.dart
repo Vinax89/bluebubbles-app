@@ -12,6 +12,7 @@ import 'package:bluebubbles/app/components/avatars/contact_avatar_widget.dart';
 import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
+import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/pinned_message_banner.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:collection/collection.dart';
 import 'package:defer_pointer/defer_pointer.dart';
@@ -338,6 +339,7 @@ class MessagesViewState extends OptimizedState<MessagesView> {
   @override
   Widget build(BuildContext context) {
     const moonIcon = CupertinoIcons.moon_fill;
+    final pinnedMessage = _messages.firstWhereOrNull((m) => m.isPinned);
     return DropRegion(
       hitTestBehavior: HitTestBehavior.translucent,
       formats: Formats.standardFormats,
@@ -590,6 +592,10 @@ class MessagesViewState extends OptimizedState<MessagesView> {
                                   child: messageWidget,
                                 );
                               }),
+                          if (pinnedMessage != null)
+                            SliverToBoxAdapter(
+                              child: PinnedMessageBanner(message: pinnedMessage),
+                            ),
                           const SliverPadding(
                             padding: EdgeInsets.all(70),
                           ),

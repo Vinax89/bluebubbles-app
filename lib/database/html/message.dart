@@ -54,6 +54,7 @@ class Message {
   bool wasDeliveredQuietly;
   bool didNotifyRecipient;
   bool isBookmarked;
+  bool isPinned;
 
   final RxInt _error = RxInt(0);
   int get error => _error.value;
@@ -115,6 +116,7 @@ class Message {
     this.wasDeliveredQuietly = false,
     this.didNotifyRecipient = false,
     this.isBookmarked = false,
+    this.isPinned = false,
   }) {
     if (error != null) _error.value = error;
     if (dateRead != null) _dateRead.value = dateRead;
@@ -206,10 +208,11 @@ class Message {
       wasDeliveredQuietly: json['wasDeliveredQuietly'] ?? false,
       didNotifyRecipient: json['didNotifyRecipient'] ?? false,
       isBookmarked: json['isBookmarked'] ?? false,
+      isPinned: json['isPinned'] ?? false,
     );
   }
 
-  Message save({Chat? chat, bool updateIsBookmarked = false}) {
+  Message save({Chat? chat, bool updateIsBookmarked = false, bool updateIsPinned = false}) {
     // Save the participant & set the handle ID to the new participant
     if (handle == null && handleId != null) {
       handle = Handle.findOne(originalROWID: handleId);
@@ -599,6 +602,7 @@ class Message {
     }
 
     existing.isBookmarked = newMessage.isBookmarked;
+    existing.isPinned = newMessage.isPinned;
 
     return existing;
   }
@@ -640,6 +644,7 @@ class Message {
       "wasDeliveredQuietly": wasDeliveredQuietly,
       "didNotifyRecipient": didNotifyRecipient,
       "isBookmarked": isBookmarked,
+      "isPinned": isPinned,
     };
     if (includeObjects) {
       map['attachments'] = (attachments).map((e) => e!.toMap()).toList();

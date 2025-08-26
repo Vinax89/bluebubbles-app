@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
 class Database {
-  static int version = 5;
+  static int version = 6;
 
   static late final Store store;
   static late final Box<Attachment> attachments;
@@ -216,6 +216,16 @@ class Database {
             Database.themes.put(oled, mode: PutMode.update);
           }
           break;
+        case 6:
+          // Initialize isPinned field for existing messages
+          final msgs = Database.messages.getAll();
+          for (final m in msgs) {
+            m.isPinned = m.isPinned;
+          }
+          if (msgs.isNotEmpty) {
+            Database.messages.putMany(msgs, mode: PutMode.update);
+          }
+          break;
         default:
           Logger.warn("No database migration found for version $nextVersion", tag: "DB-Migration");
           break;
@@ -230,6 +240,32 @@ class Database {
   /// Wrapper for store.runInTransaction
   static R runInTransaction<R>(TxMode mode, R Function() fn) {
     return store.runInTransaction(mode, fn);
+  }
+
+  static void pinMessage(String guid) {
+    if (kIsWeb) return;
+    runInTransaction(TxMode.write, () {
+      final query = messages.query(Message_.guid.equals(guid)).build();
+      final msg = query.findFirst();
+      query.close();
+      if (msg != null) {
+        msg.isPinned = true;
+        messages.put(msg, mode: PutMode.update);
+      }
+    });
+  }
+
+  static void unpinMessage(String guid) {
+    if (kIsWeb) return;
+    runInTransaction(TxMode.write, () {
+      final query = messages.query(Message_.guid.equals(guid)).build();
+      final msg = query.findFirst();
+      query.close();
+      if (msg != null) {
+        msg.isPinned = false;
+        messages.put(msg, mode: PutMode.update);
+      }
+    });
   }
 
   static reset() {

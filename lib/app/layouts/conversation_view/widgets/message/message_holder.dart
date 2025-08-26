@@ -387,6 +387,15 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
                                               Column(
                                                 crossAxisAlignment: message.isFromMe! ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                                 children: [
+                                                  if (message.isPinned && index == 0)
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(bottom: 2.0),
+                                                      child: Icon(
+                                                        ss.settings.skin.value == Skins.iOS ? CupertinoIcons.pin : Icons.push_pin_outlined,
+                                                        size: 12,
+                                                        color: context.theme.colorScheme.primary,
+                                                      ),
+                                                    ),
                                                   // interactive messages may have subjects, so render them here
                                                   // also render the subject for attachments that may have not rendered already
                                                   if ((message.hasApplePayloadData || message.isLegacyUrlPreview || message.isInteractive

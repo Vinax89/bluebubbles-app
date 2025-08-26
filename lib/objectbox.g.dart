@@ -608,6 +608,11 @@ final _entities = <obx_int.ModelEntity>[
             id: const obx_int.IdUid(50, 2365667614914378517),
             name: 'isDelivered',
             type: 1,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(51, 6421366235089828344),
+            name: 'isPinned',
+            type: 1,
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
@@ -1446,6 +1451,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
           fbb.addBool(47, object.didNotifyRecipient);
           fbb.addBool(48, object.isBookmarked);
           fbb.addBool(49, object.isDelivered);
+          fbb.addBool(50, object.isPinned);
           fbb.finish(fbb.endTable());
           return object.id ?? 0;
         },
@@ -1542,6 +1548,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               const fb.BoolReader().vTableGet(buffer, rootOffset, 98, false);
           final isBookmarkedParam =
               const fb.BoolReader().vTableGet(buffer, rootOffset, 100, false);
+          final isPinnedParam =
+              const fb.BoolReader().vTableGet(buffer, rootOffset, 104, false);
           final object = Message(
               id: idParam,
               originalROWID: originalROWIDParam,
@@ -1575,7 +1583,8 @@ obx_int.ModelDefinition getObjectBoxModel() {
               dateEdited: dateEditedParam,
               wasDeliveredQuietly: wasDeliveredQuietlyParam,
               didNotifyRecipient: didNotifyRecipientParam,
-              isBookmarked: isBookmarkedParam)
+              isBookmarked: isBookmarkedParam,
+              isPinned: isPinnedParam)
             ..bigEmoji =
                 const fb.BoolReader().vTableGetNullable(buffer, rootOffset, 76)
             ..dbAttributedBody = const fb.StringReader(asciiOptimization: true)
@@ -2196,6 +2205,10 @@ class Message_ {
   /// See [Message.isDelivered].
   static final isDelivered =
       obx.QueryBooleanProperty<Message>(_entities[5].properties[39]);
+
+  /// See [Message.isPinned].
+  static final isPinned =
+      obx.QueryBooleanProperty<Message>(_entities[5].properties[40]);
 
   /// see [Message.dbAttachments]
   static final dbAttachments =

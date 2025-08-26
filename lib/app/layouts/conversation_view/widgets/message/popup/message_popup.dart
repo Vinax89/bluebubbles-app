@@ -14,6 +14,7 @@ import 'package:bluebubbles/app/components/custom/custom_cupertino_alert_dialog.
 import 'package:bluebubbles/app/layouts/findmy/findmy_pin_clipper.dart';
 import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
+import 'package:bluebubbles/database/database.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/pages/conversation_view.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/reply/reply_thread_popup.dart';
 import 'package:bluebubbles/app/wrappers/titlebar_wrapper.dart';
@@ -804,6 +805,16 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
     popDetails();
   }
 
+  void togglePin() {
+    message.isPinned = !message.isPinned;
+    if (message.isPinned) {
+      Database.pinMessage(message.guid!);
+    } else {
+      Database.unpinMessage(message.guid!);
+    }
+    popDetails();
+  }
+
   void messageInfo() {
     const encoder = JsonEncoder.withIndent("     ");
     Map map = message.toMap(includeObjects: true);
@@ -968,6 +979,11 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
           onTap: toggleBookmark,
           action: DetailsMenuAction.Bookmark,
           customTitle: message.isBookmarked ? "Remove Bookmark" : "Add Bookmark",
+        ),
+        DetailsMenuActionWidget(
+          onTap: togglePin,
+          action: DetailsMenuAction.Pin,
+          customTitle: message.isPinned ? "Unpin" : "Pin",
         ),
         DetailsMenuActionWidget(
           onTap: selectMultiple,

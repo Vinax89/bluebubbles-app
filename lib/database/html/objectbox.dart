@@ -305,6 +305,9 @@ class Message_ {
 
   /// see [Message.isBookmarked]
   static final isBookmarked = Temp();
+
+  /// see [Message.isPinned]
+  static final isPinned = Temp();
 }
 
 Future<Store> openStore(
