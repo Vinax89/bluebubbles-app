@@ -52,19 +52,16 @@ bool isAuthing = false;
 final systemTray = st.SystemTray();
 
 @pragma('vm:entry-point')
-//ignore: prefer_void_to_null
-Future<Null> main(List<String> arguments) async {
+Future<void> main(List<String> arguments) async {
   await initializeApp(false, arguments);
 }
 
 @pragma('vm:entry-point')
-// ignore: prefer_void_to_null
-Future<Null> bubble() async {
+Future<void> bubble() async {
   await initializeApp(true, []);
 }
 
-//ignore: prefer_void_to_null
-Future<Null> initializeApp(bool bubble, List<String> arguments) async {
+Future<void> initializeApp(bool bubble, List<String> arguments) async {
   runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
