@@ -7,8 +7,6 @@ environment:
   sdk: '>=3.1.3 <4.0.0'
 
 dependencies:
-  flutter:
-    sdk: flutter
   adaptive_theme: ^3.6.0
   animated_size_and_fade: ^4.0.0
   animations: ^2.0.11
@@ -34,15 +32,17 @@ dependencies:
   fast_contacts: ^4.0.0
   file_picker: ^8.0.0+1
   firebase_core: ^3.3.0
-  firebase_messaging: ^15.0.4
   firebase_dart:
     git:
       url: https://github.com/appsup-dart/firebase_dart.git
       ref: beb79f70a2bb0e96e6bb9fdebac2ff452f138950
       path: package
+  firebase_messaging: ^15.0.4
   fixnum: ^1.1.0
   fl_chart: ^0.68.0
   flex_color_scheme: ^8.1.1
+  flutter:
+    sdk: flutter
   flutter_acrylic: ^1.1.4
   flutter_animate: ^4.5.0
   flutter_app_badger: ^1.5.0
