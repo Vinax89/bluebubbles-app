@@ -112,6 +112,11 @@ class IntentsService extends GetxService {
     }
   }
 
+  /// Generates a FaceTime link for the provided [callUuid] and attempts to open it.
+  ///
+  /// On mobile and desktop platforms the link is launched using the system's
+  /// external application handler. On web a new tab is opened, and if the link
+  /// cannot be launched a friendly message is shown to the user.
   Future<void> answerFaceTime(String callUuid) async {
     if (Get.context != null) {
       showDialog(
@@ -150,10 +155,13 @@ class IntentsService extends GetxService {
       return showSnackbar("Failed to answer FaceTime", "Unable to generate FaceTime link!");
     }
 
-    if (!kIsWeb) {
+    if (kIsWeb) {
+      final uri = Uri.parse(link);
+      if (!await launchUrl(uri)) {
+        showSnackbar("Failed to open FaceTime", "Your browser couldn't open the FaceTime link.");
+      }
+    } else {
       await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
-    } else if (kIsWeb) {
-      // TODO: Implement web FaceTime
     }
   }
 
