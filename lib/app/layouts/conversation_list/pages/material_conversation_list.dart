@@ -1,6 +1,5 @@
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/pages/conversation_list.dart';
-import 'package:bluebubbles/app/layouts/conversation_list/widgets/conversation_list_fab.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/widgets/header/material_header.dart';
 import 'package:bluebubbles/app/layouts/conversation_list/widgets/tile/list_item.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
@@ -61,78 +60,116 @@ class _MaterialConversationListState extends OptimizedState<MaterialConversation
         color: backgroundColor,
         padding: EdgeInsets.only(top: kIsDesktop ? 30 : 0),
         child: Scaffold(
-          appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
-            child: MaterialHeader(parentController: controller),
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            toolbarHeight: 100,
+            flexibleSpace: MaterialHeader(parentController: controller),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
           ),
           backgroundColor: backgroundColor,
           extendBodyBehindAppBar: true,
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: !showArchived && !showUnknown
-              ? ConversationListFAB(parentController: controller)
-              : const SizedBox.shrink(),
-          body: Obx(() {
-            final _chats = chats.chats.archivedHelper(showArchived).unknownSendersHelper(showUnknown);
+          bottomNavigationBar: ns.isTabletMode(context)
+              ? null
+              : NavigationBar(
+                  selectedIndex: 0,
+                  onDestinationSelected: (index) {
+                    if (index == 1) controller.openNewChatCreator(context);
+                  },
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.chat_bubble_outline),
+                      label: 'Chats',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.create_outlined),
+                      label: 'New',
+                    ),
+                  ],
+                ),
+          body: Row(
+            children: [
+              if (ns.isTabletMode(context))
+                NavigationRail(
+                  selectedIndex: 0,
+                  onDestinationSelected: (index) {
+                    if (index == 1) controller.openNewChatCreator(context);
+                  },
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.chat_bubble_outline),
+                      label: Text('Chats'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.create_outlined),
+                      label: Text('New'),
+                    ),
+                  ],
+                ),
+              Expanded(
+                child: Obx(() {
+                  final _chats = chats.chats.archivedHelper(showArchived).unknownSendersHelper(showUnknown);
 
-            if (!chats.loadedChatBatch.value || _chats.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 100),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          !chats.loadedChatBatch.value
-                              ? "Loading chats..."
-                              : showArchived
-                                  ? "You have no archived chats"
-                                  : showUnknown
-                                      ? "You have no messages from unknown senders :)"
-                                      : "You have no chats :(",
-                          style: context.theme.textTheme.labelLarge,
-                          textAlign: TextAlign.center,
+                  if (!chats.loadedChatBatch.value || _chats.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 100),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                !chats.loadedChatBatch.value
+                                    ? "Loading chats..."
+                                    : showArchived
+                                        ? "You have no archived chats"
+                                        : showUnknown
+                                            ? "You have no messages from unknown senders :)"
+                                            : "You have no chats :(",
+                                style: context.theme.textTheme.labelLarge,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            if (!chats.loadedChatBatch.value) buildProgressIndicator(context, size: 15),
+                          ],
                         ),
                       ),
-                      if (!chats.loadedChatBatch.value) buildProgressIndicator(context, size: 15),
-                    ],
-                  ),
-                ),
-              );
-            }
+                    );
+                  }
 
-            return NotificationListener(
-              onNotification: (notif) {
-                if (notif is ScrollStartNotification) {
-                  controller.materialScrollStartPosition = controller.materialScrollController.offset;
-                }
-                return true;
-              },
-              child: ScrollbarWrapper(
-                showScrollbar: true,
-                controller: controller.materialScrollController,
-                child: Obx(() => ListView.builder(
+                  return NotificationListener(
+                    onNotification: (notif) {
+                      if (notif is ScrollStartNotification) {
+                        controller.materialScrollStartPosition = controller.materialScrollController.offset;
+                      }
+                      return true;
+                    },
+                    child: ScrollbarWrapper(
+                      showScrollbar: true,
                       controller: controller.materialScrollController,
-                      physics: ThemeSwitcher.getScrollPhysics(),
-                      findChildIndexCallback: (key) => findChildIndexByKey(_chats, key, (item) => item.guid),
-                      itemBuilder: (context, index) {
-                        final chat = _chats[index];
-                        return Container(
-                          key: ValueKey(chat.guid),
-                          child: ListItem(
-                            chat: chat,
-                            controller: controller,
-                            update: () {
-                              setState(() {});
-                            }
-                          )
-                        );
-                      },
-                      itemCount: _chats.length,
-                    )),
+                      child: Obx(() => ListView.builder(
+                            controller: controller.materialScrollController,
+                            physics: ThemeSwitcher.getScrollPhysics(),
+                            findChildIndexCallback: (key) => findChildIndexByKey(_chats, key, (item) => item.guid),
+                            itemBuilder: (context, index) {
+                              final chat = _chats[index];
+                              return Container(
+                                  key: ValueKey(chat.guid),
+                                  child: ListItem(
+                                      chat: chat,
+                                      controller: controller,
+                                      update: () {
+                                        setState(() {});
+                                      }));
+                            },
+                            itemCount: _chats.length,
+                          )),
+                    ),
+                  );
+                }),
               ),
-            );
-          }),
+            ],
+          ),
         ),
       ),
     );
