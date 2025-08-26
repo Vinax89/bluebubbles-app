@@ -46,7 +46,7 @@ void main() {
     final logFile = File(join(logDir.path, Logger.latestLogName));
     await logFile.writeAsString('2024-01-01 [INFO] log');
 
-    final zipPath = Logger.compressLogs();
+    final zipPath = await Logger.compressLogs();
     final zipFile = File(zipPath);
     expect(zipFile.existsSync(), isTrue);
 
@@ -54,12 +54,12 @@ void main() {
     expect(archive.files.any((f) => f.name.endsWith('.log')), isTrue);
   });
 
-  test('clearLogs removes existing logs', () {
+  test('clearLogs removes existing logs', () async {
     final logFile = File(join(logDir.path, Logger.latestLogName));
     logFile.writeAsStringSync('test log');
     expect(logDir.listSync().isNotEmpty, isTrue);
 
-    Logger.clearLogs();
+    await Logger.clearLogs();
     expect(logDir.listSync(), isEmpty);
   });
 }

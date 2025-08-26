@@ -212,14 +212,16 @@ class BaseLogger extends GetxService {
     _logger = createLogger();
   }
 
-  String compressLogs() {
+  Future<String> compressLogs() async {
     final Directory logDir = Directory(Logger.logDir);
     final date = DateTime.now().toIso8601String().split('T').first;
     final File zippedLogFile =
         File("${fs.appDocDir.path}/bluebubbles-logs-$date.zip");
-    if (zippedLogFile.existsSync()) zippedLogFile.deleteSync();
+    if (await zippedLogFile.exists()) {
+      await zippedLogFile.delete();
+    }
 
-    final List<FileSystemEntity> files = logDir.listSync();
+    final List<FileSystemEntity> files = await logDir.list().toList();
     final List<FileSystemEntity> logFiles =
         files.where((file) => file.path.endsWith(".log")).toList();
     final List<String> logPaths = logFiles.map((file) => file.path).toList();
@@ -236,9 +238,9 @@ class BaseLogger extends GetxService {
 
   Future<List<String>> getLogs({maxLines = 1000}) async {
     final Directory logDir = Directory(Logger.logDir);
-    if (!logDir.existsSync()) return [];
+    if (!await logDir.exists()) return [];
 
-    final List<FileSystemEntity> files = logDir.listSync();
+    final List<FileSystemEntity> files = await logDir.list().toList();
     final List<FileSystemEntity> logFiles =
         files.where((file) => file.path.endsWith(latestLogName)).toList();
     if (logFiles.isEmpty) return [];
@@ -270,13 +272,13 @@ class BaseLogger extends GetxService {
     return logs;
   }
 
-  void clearLogs() {
+  Future<void> clearLogs() async {
     final Directory logDir = Directory(Logger.logDir);
-    if (!logDir.existsSync()) return;
+    if (!await logDir.exists()) return;
 
-    for (final file in logDir.listSync()) {
+    await for (final file in logDir.list()) {
       if (file is File) {
-        file.deleteSync();
+        await file.delete();
       }
     }
   }
