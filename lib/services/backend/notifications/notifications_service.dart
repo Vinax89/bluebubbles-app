@@ -61,9 +61,19 @@ class NotificationsService extends GetxService {
     if (!kIsWeb && !kIsDesktop) {
       const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('ic_stat_icon');
       const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-      await flnp.initialize(initializationSettings, onDidReceiveNotificationResponse: (NotificationResponse? response) {
-        if (response?.payload != null) {
-          intents.openChat(response!.payload);
+      await flnp.initialize(initializationSettings, onDidReceiveNotificationResponse: (NotificationResponse? response) async {
+        if (response == null) return;
+        if (response.actionType == NotificationActionType.input) {
+          try {
+            final data = response.payload != null ? jsonDecode(response.payload!) : {};
+            final chatGuid = data['chatGuid'];
+            final text = response.input;
+            if (chatGuid != null && text != null && text.trim().isNotEmpty) {
+              await http.sendMessage(chatGuid, 'temp-${randomString(8)}', text);
+            }
+          } catch (_) {}
+        } else if (response.payload != null) {
+          intents.openChat(response.payload!);
         }
       });
       final details = await flnp.getNotificationAppLaunchDetails();
@@ -170,7 +180,7 @@ class NotificationsService extends GetxService {
     );
   }
 
-  Future<void> createNotification(Chat chat, Message message) async {
+  Future<void> createNotification(Chat chat, Message message, {String? payload}) async {
     if (chat.shouldMuteNotification(message) || message.isFromMe!) return;
     final isGroup = chat.isGroup;
     final guid = chat.guid;
@@ -194,6 +204,8 @@ class NotificationsService extends GetxService {
       contactIcon = personIcon;
     }
 
+    final notificationPayload = payload ?? jsonEncode({'chatGuid': guid, 'messageGuid': message.guid});
+
     if (kIsWeb && Notification.permission == "granted") {
       final notif = Notification(title, body: text, icon: "data:image/png;base64,${base64Encode(chatIcon)}", tag: message.guid);
       notif.onClick.listen((event) async {
@@ -201,6 +213,36 @@ class NotificationsService extends GetxService {
       });
     } else if (kIsDesktop) {
       _lock.synchronized(() async => await showDesktopNotif(message, text, chat, guid, title, contactName, isGroup, isReaction));
+      await flnp.show(
+        message.guid.hashCode,
+        title,
+        text,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            NEW_MESSAGE_CHANNEL,
+            'New Messages',
+            channelDescription: 'Displays all received new messages',
+            priority: Priority.max,
+            importance: Importance.max,
+            actions: [
+              const AndroidNotificationAction(
+                'reply',
+                'Reply',
+                inputs: [AndroidNotificationActionInput(label: 'Message')],
+              ),
+            ],
+          ),
+          macOS: DarwinNotificationDetails(
+            actions: [
+              const DarwinNotificationAction.text('reply', 'Reply', buttonTitle: 'Send', placeholder: 'Message')
+            ],
+          ),
+          linux: LinuxNotificationDetails(
+            actions: [LinuxNotificationAction.text('reply', 'Reply')],
+          ),
+        ),
+        payload: notificationPayload,
+      );
     } else {
       await mcs.invokeMethod("create-incoming-message-notification", {
         "channel_id": NEW_MESSAGE_CHANNEL,

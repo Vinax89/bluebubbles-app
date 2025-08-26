@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
@@ -101,7 +102,11 @@ class MessageHelper {
     if (ls.isAlive && cm.isChatActive(chat.guid)) return;
     // if app is alive, on chat list, but notifying on chat list is disabled
     if (ls.isAlive && cm.activeChat == null && Get.rawRoute?.settings.name == "/" && !ss.settings.notifyOnChatList.value) return;
-    await notif.createNotification(chat, message);
+    await notif.createNotification(
+      chat,
+      message,
+      payload: jsonEncode({'chatGuid': chat.guid}),
+    );
   }
 
   static Future<void> handleSummaryNotification(List<Message> messages, {bool findExisting = true}) async {
