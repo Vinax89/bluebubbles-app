@@ -19,6 +19,16 @@ class StartupTasks {
 
   static final Completer<void> uiReady = Completer<void>();
 
+  static Timer? _updateCheckTimer;
+  static Timer? _reviewRequestTimer;
+
+  static void dispose() {
+    _updateCheckTimer?.cancel();
+    _updateCheckTimer = null;
+    _reviewRequestTimer?.cancel();
+    _reviewRequestTimer = null;
+  }
+
   static Future<void> waitForUI() async {
     await uiReady.future;
   }
@@ -91,6 +101,8 @@ class StartupTasks {
   static Future<void> onStartup() async {
     if (!ss.settings.finishedSetup.value) return;
 
+    dispose();
+
     if (!kIsDesktop) {
       chats.init();
       socket;
@@ -105,7 +117,7 @@ class StartupTasks {
 
     // We don't need to check for updates immediately, so delay it so other
     // code has a chance to run and we don't block the UI thread.
-    Future.delayed(const Duration(seconds: 30), () {
+    _updateCheckTimer = Timer(const Duration(seconds: 30), () {
       try {
         ss.checkServerUpdate();
       } catch (ex, stack) {
@@ -121,10 +133,11 @@ class StartupTasks {
 
     // Check if we need to request a review
     if (Platform.isAndroid) {
-      Future.delayed(const Duration(minutes: 1), () async {
+      _reviewRequestTimer = Timer(const Duration(minutes: 1), () async {
         await reviewFlow();
       });
     }
+    onExit(dispose);
   }
 
   static Future<void> checkInstanceLock() async {
