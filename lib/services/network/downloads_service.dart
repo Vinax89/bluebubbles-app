@@ -115,10 +115,21 @@ class AttachmentDownloadController extends GetxController {
       }
 
       error.value = true;
+      isFetching = false;
       attachmentDownloader._removeFromQueue(this);
       return Response(requestOptions: RequestOptions(path: ''));
     });
-    if (response.statusCode != 200) return;
+    if (response.statusCode != 200) {
+      if (!error.value) {
+        for (Function f in errorFuncs) {
+          f.call();
+        }
+        error.value = true;
+        attachmentDownloader._removeFromQueue(this);
+      }
+      isFetching = false;
+      return;
+    }
     Uint8List bytes;
     if (attachment.mimeType == "image/gif") {
       bytes = await fixSpeedyGifs(response.data);
