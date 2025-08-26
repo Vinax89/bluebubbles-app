@@ -121,12 +121,24 @@ Future<Exception?> _initTimezone() async {
     tz.initializeTimeZones();
     try {
       tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error("Failed to set local timezone", error: e, trace: s);
+      rethrow;
+    }
     if (!await EntityExtractorModelManager().isModelDownloaded(EntityExtractorLanguage.english.name)) {
-      EntityExtractorModelManager().downloadModel(EntityExtractorLanguage.english.name, isWifiRequired: false);
+      try {
+        await EntityExtractorModelManager()
+            .downloadModel(EntityExtractorLanguage.english.name, isWifiRequired: false);
+      } catch (e, s) {
+        Logger.error("Failed to download entity extraction model", error: e, trace: s);
+        rethrow;
+      }
     }
   }, "Time zone initialization failed");
 }
+
+@visibleForTesting
+Future<Exception?> testInitTimezone() => _initTimezone();
 
 Future<Exception?> _initDesktopWindow(List<String> arguments) async {
   return await _captureError(() async {
