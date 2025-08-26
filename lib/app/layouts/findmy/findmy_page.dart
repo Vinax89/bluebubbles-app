@@ -399,11 +399,15 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                             ? () async {
                                 await panelController.close();
                                 await completer.future;
-                                final marker = markers.values.firstWhere((e) =>
+                                final marker = markers.values.firstWhereOrNull((e) =>
                                     e.point.latitude == item.location?.latitude &&
                                     e.point.longitude == item.location?.longitude);
-                                popupController.showPopupsOnlyFor([marker]);
-                                mapController.move(LatLng(item.location!.latitude!, item.location!.longitude!), 10);
+                                if (marker != null) {
+                                  popupController.showPopupsOnlyFor([marker]);
+                                }
+                                mapController.move(
+                                    LatLng(item.location!.latitude!, item.location!.longitude!),
+                                    10);
                               }
                             : null,
                         trailing: item.location?.latitude != null && item.location?.longitude != null ? ButtonTheme(
@@ -506,11 +510,15 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                             ? () async {
                                 await panelController.close();
                                 await completer.future;
-                                final marker = markers.values.firstWhere((e) =>
+                                final marker = markers.values.firstWhereOrNull((e) =>
                                     e.point.latitude == item.location?.latitude &&
                                     e.point.longitude == item.location?.longitude);
-                                popupController.showPopupsOnlyFor([marker]);
-                                mapController.move(LatLng(item.location!.latitude!, item.location!.longitude!), 10);
+                                if (marker != null) {
+                                  popupController.showPopupsOnlyFor([marker]);
+                                }
+                                mapController.move(
+                                    LatLng(item.location!.latitude!, item.location!.longitude!),
+                                    10);
                               }
                             : null,
                         onLongPress: () async {
@@ -577,12 +585,15 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                                     ? () async {
                                         await panelController.close();
                                         await completer.future;
-                                        final marker = markers.values.firstWhere((e) =>
+                                        final marker = markers.values.firstWhereOrNull((e) =>
                                             e.point.latitude == item.location?.latitude &&
                                             e.point.longitude == item.location?.longitude);
-                                        popupController.showPopupsOnlyFor([marker]);
+                                        if (marker != null) {
+                                          popupController.showPopupsOnlyFor([marker]);
+                                        }
                                         mapController.move(
-                                            LatLng(item.location!.latitude!, item.location!.longitude!), 10);
+                                            LatLng(item.location!.latitude!, item.location!.longitude!),
+                                            10);
                                       }
                                     : null,
                                 onLongPress: () async {
@@ -707,9 +718,11 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                             await panelController.close();
                           }
                           await completer.future;
-                          final marker = markers.values.firstWhere(
+                          final marker = markers.values.firstWhereOrNull(
                               (e) => e.point.latitude == item.latitude && e.point.longitude == item.longitude);
-                          popupController.showPopupsOnlyFor([marker]);
+                          if (marker != null) {
+                            popupController.showPopupsOnlyFor([marker]);
+                          }
                           mapController.move(LatLng(item.latitude!, item.longitude!), 10);
                         },
                         onLongPress: () async {
