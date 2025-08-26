@@ -8,40 +8,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 
-// TODO(abarth): These constants probably belong somewhere more general.
-
-// Used XD to flutter plugin(https://github.com/AdobeXD/xd-to-flutter-plugin/)
-// to derive values of TextStyle(height and letterSpacing) from
-// Adobe XD template for iOS 13, which can be found in
-// Apple Design Resources(https://developer.apple.com/design/resources/).
-// However the values are not exactly the same as native, so eyeballing is needed.
-const TextStyle _kCupertinoDialogTitleStyle = TextStyle(
-  fontFamily: '.SF UI Display',
-  inherit: false,
-  fontSize: 17.0,
-  fontWeight: FontWeight.w600,
-  height: 1.3,
-  letterSpacing: -0.5,
-  textBaseline: TextBaseline.alphabetic,
-);
-
-const TextStyle _kCupertinoDialogContentStyle = TextStyle(
-  fontFamily: '.SF UI Text',
-  inherit: false,
-  fontSize: 13.0,
-  fontWeight: FontWeight.w400,
-  height: 1.35,
-  letterSpacing: -0.2,
-  textBaseline: TextBaseline.alphabetic,
-);
-
-const TextStyle _kCupertinoDialogActionStyle = TextStyle(
-  fontFamily: '.SF UI Text',
-  inherit: false,
-  fontSize: 16.8,
-  fontWeight: FontWeight.w400,
-  textBaseline: TextBaseline.alphabetic,
-);
+import 'package:bluebubbles/app/styles/cupertino_dialog_styles.dart';
 
 // iOS dialogs have a normal display width and another display width that is
 // used when the device is in accessibility mode. Each of these widths are
@@ -850,7 +817,7 @@ class _CupertinoAlertContentSection extends StatelessWidget {
             top: MediaQuery.of(context).textScaler.scale(_kEdgePadding),
           ),
           child: DefaultTextStyle(
-            style: _kCupertinoDialogTitleStyle.copyWith(
+            style: kCupertinoDialogTitleStyle.copyWith(
               color: CupertinoDynamicColor.resolve(CupertinoColors.label, context),
             ),
             textAlign: TextAlign.center,
@@ -866,7 +833,7 @@ class _CupertinoAlertContentSection extends StatelessWidget {
             top: title == null ? _kEdgePadding : 1.0,
           ),
           child: DefaultTextStyle(
-            style: _kCupertinoDialogContentStyle.copyWith(
+            style: kCupertinoDialogContentStyle.copyWith(
               color: CupertinoDynamicColor.resolve(CupertinoColors.label, context),
             ),
             textAlign: TextAlign.center,
@@ -1077,7 +1044,7 @@ class CupertinoDialogAction extends StatelessWidget {
   /// Dialog actions have a built-in text resizing policy for long text. To
   /// ensure that this resizing policy always works as expected, [textStyle]
   /// must be used if a text size is desired other than that specified in
-  /// [_kCupertinoDialogActionStyle].
+  /// [kCupertinoDialogActionStyle].
   final TextStyle? textStyle;
 
   /// The widget below this widget in the tree.
@@ -1156,7 +1123,7 @@ class CupertinoDialogAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle style = _kCupertinoDialogActionStyle.copyWith(
+    TextStyle style = kCupertinoDialogActionStyle.copyWith(
       color: CupertinoDynamicColor.resolve(
         isDestructiveAction ? CupertinoColors.systemRed : CupertinoColors.systemBlue,
         context,
