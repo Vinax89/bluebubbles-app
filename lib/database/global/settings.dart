@@ -18,6 +18,7 @@ class Settings {
   final RxString guidAuthKey = "".obs;
   final RxString serverAddress = "".obs;
   final RxMap<String, String> customHeaders = <String, String>{}.obs;
+  final RxBool trustSelfSignedCerts = false.obs;
   final RxBool finishedSetup = false.obs;
   final RxBool reachedConversationList = false.obs;
   final RxBool autoDownload = true.obs;
@@ -385,6 +386,7 @@ class Settings {
         'guidAuthKey': guidAuthKey.value,
         'serverAddress': serverAddress.value,
         'customHeaders': customHeaders,
+        'trustSelfSignedCerts': trustSelfSignedCerts.value,
         'finishedSetup': finishedSetup.value,
         'reachedConversationList': reachedConversationList.value,
         'colorsFromMedia': colorsFromMedia.value,
@@ -443,6 +445,7 @@ class Settings {
     ss.settings.tabletMode.value = kIsDesktop || (map['tabletMode'] ?? true);
     ss.settings.immersiveMode.value = map['immersiveMode'] ?? false;
     ss.settings.avatarScale.value = map['avatarScale']?.toDouble() ?? 1.0;
+    ss.settings.trustSelfSignedCerts.value = map['trustSelfSignedCerts'] ?? false;
     ss.settings.launchAtStartup.value = map['launchAtStartup'] ?? false;
     ss.settings.launchAtStartupMinimized.value = map['launchAtStartupMinimized'] ?? false;
     ss.settings.closeToTray.value = map['closeToTray'] ?? true;
@@ -537,6 +540,7 @@ class Settings {
     s.guidAuthKey.value = map['guidAuthKey'] ?? "";
     s.serverAddress.value = map['serverAddress'] ?? "";
     s.customHeaders.value = _processCustomHeaders(map['customHeaders']);
+    s.trustSelfSignedCerts.value = map['trustSelfSignedCerts'] ?? false;
     s.finishedSetup.value = map['finishedSetup'] ?? false;
     s.autoDownload.value = map['autoDownload'] ?? true;
     s.autoSave.value = map['autoSave'] ?? false;

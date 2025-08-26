@@ -1,4 +1,6 @@
 import 'package:bluebubbles/helpers/helpers.dart';
+import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:universal_io/io.dart';
 
 bool hasBadCert = false;
@@ -18,7 +20,13 @@ class BadCertOverride extends HttpOverrides {
         } else {
           hasBadCert = serverUrl.endsWith(host);
         }
-        return hasBadCert;
+
+        if (hasBadCert && !ss.settings.trustSelfSignedCerts.value) {
+          Logger.error("Untrusted certificate for $host", tag: "BadCertOverride");
+          showSnackbar("Certificate Error", "The certificate presented by $host is not trusted.");
+        }
+
+        return hasBadCert && ss.settings.trustSelfSignedCerts.value;
       };
   }
 }
