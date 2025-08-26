@@ -18,7 +18,3 @@ class CustomService extends GetxService {
     super.onClose();
   }
 }
-
-CustomService customService = Get.isRegistered<CustomService>()
-    ? Get.find<CustomService>()
-    : Get.put(CustomService());

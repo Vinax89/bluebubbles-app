@@ -5,7 +5,7 @@ import '../../services/custom_service.dart';
 class CustomServiceWidget extends StatelessWidget {
   CustomServiceWidget({super.key});
 
-  final CustomService service = customService;
+  final CustomService service = Get.find<CustomService>();
 
   @override
   Widget build(BuildContext context) {
