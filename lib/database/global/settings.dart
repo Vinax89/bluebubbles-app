@@ -19,6 +19,7 @@ class Settings {
   final RxString iCloudAccount = "".obs;
   final RxString guidAuthKey = "".obs;
   final RxString serverAddress = "".obs;
+  final RxMap<String, String> chatKeys = <String, String>{}.obs;
   final RxMap<String, String> customHeaders = <String, String>{}.obs;
   final RxBool trustSelfSignedCerts = false.obs;
   final RxBool finishedSetup = false.obs;
@@ -289,6 +290,7 @@ class Settings {
 
   Map<String, dynamic> toMap({bool includeAll = false}) {
     Map<String, dynamic> map = {
+      'chatKeys': chatKeys,
       'autoDownload': autoDownload.value,
       'onlyWifiDownload': onlyWifiDownload.value,
       'maxAttachmentDownloads': maxAttachmentDownloads.value,
@@ -569,6 +571,7 @@ class Settings {
     s.iCloudAccount.value = map['iCloudAccount'] ?? "";
     s.guidAuthKey.value = map['guidAuthKey'] ?? "";
     s.serverAddress.value = map['serverAddress'] ?? "";
+    s.chatKeys.value = _processChatKeys(map['chatKeys']);
     s.customHeaders.value = _processCustomHeaders(map['customHeaders']);
     s.trustSelfSignedCerts.value = map['trustSelfSignedCerts'] ?? false;
     s.finishedSetup.value = map['finishedSetup'] ?? false;
@@ -720,6 +723,15 @@ class Settings {
   void resetDetailsMenuActions() {
     ss.settings._detailsMenuActions.value = DetailsMenuAction.values;
     ss.settings.save();
+  }
+}
+
+Map<String, String> _processChatKeys(dynamic rawJson) {
+  try {
+    return (rawJson is Map ? rawJson : jsonDecode(rawJson) as Map).cast<String, String>();
+  } catch (e) {
+    debugPrint("Using default chatKeys");
+    return {};
   }
 }
 

@@ -149,9 +149,23 @@ class SocketService extends GetxService {
   Future<Map<String, dynamic>> sendMessage(String event, Map<String, dynamic> message) {
     Completer<Map<String, dynamic>> completer = Completer();
 
-    socket.emitWithAck(event, message, ack: (response) {
+    String? chatGuid = message['chatGuid'];
+    Map<String, dynamic> outbound = message;
+
+    if (chatGuid != null) {
+      final key = ss.getChatKey(chatGuid);
+      outbound = {
+        'chatGuid': chatGuid,
+        'data': encryptAES(jsonEncode(message), key),
+        'encrypted': true,
+      };
+    }
+
+    socket.emitWithAck(event, outbound, ack: (response) {
       if (response['encrypted'] == true) {
-        response['data'] = jsonDecode(decryptAES(response['data'], password));
+        String? rGuid = response['chatGuid'];
+        final key = rGuid != null ? ss.getChatKey(rGuid) : password;
+        response['data'] = jsonDecode(decryptAES(response['data'], key));
       }
 
       if (!completer.isCompleted) {

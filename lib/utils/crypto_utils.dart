@@ -65,3 +65,33 @@ Uint8List genRandomWithNonZero(int seedLength) {
   }
   return uint8list;
 }
+
+// Generates an EC key pair using the prime256v1 curve
+AsymmetricKeyPair<PublicKey, PrivateKey> generateKeyPair() {
+  final ecParams = ECDomainParameters('prime256v1');
+
+  final random = FortunaRandom();
+  random.seed(KeyParameter(genRandomWithNonZero(32)));
+
+  final generator = ECKeyGenerator();
+  generator.init(ParametersWithRandom(ECKeyGeneratorParameters(ecParams), random));
+  return generator.generateKeyPair();
+}
+
+// Performs an ECDH key exchange returning a shared secret
+Uint8List computeSharedSecret(ECPrivateKey privateKey, ECPublicKey publicKey) {
+  final agreement = ECDHBasicAgreement()..init(privateKey);
+  final secret = agreement.calculateAgreement(publicKey);
+  return _bigIntToBytes(secret);
+}
+
+Uint8List _bigIntToBytes(BigInt number) {
+  final size = (number.bitLength + 7) >> 3;
+  final result = Uint8List(size);
+  var num = number;
+  for (int i = size - 1; i >= 0; i--) {
+    result[i] = (num & BigInt.from(0xff)).toInt();
+    num = num >> 8;
+  }
+  return result;
+}
