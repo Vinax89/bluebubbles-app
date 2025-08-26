@@ -9,6 +9,11 @@ abstract class QueueItem {
   Completer<void>? completer;
 
   QueueItem({required this.type, this.completer});
+
+  /// Identifier used by [Queue] to group items that must remain ordered. Items
+  /// sharing the same key will not be processed in parallel. Defaults to a
+  /// single global queue.
+  String get queueKey => 'global';
 }
 
 class IncomingItem extends QueueItem {
@@ -51,4 +56,7 @@ class OutgoingItem extends QueueItem {
     this.reaction,
     this.customArgs,
   });
+
+  @override
+  String get queueKey => chat.guid;
 }
