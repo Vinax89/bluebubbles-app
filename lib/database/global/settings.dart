@@ -11,6 +11,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
 import 'package:universal_io/io.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Settings {
   final RxInt firstFcmRegisterDate = 0.obs;
@@ -95,6 +96,8 @@ class Settings {
   final RxBool replaceEmoticonsWithEmoji = false.obs;
 
   // final RxString emojiFontFamily;
+
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   // Private API features
   final RxnBool serverPrivateAPI = RxnBool();
@@ -190,6 +193,15 @@ class Settings {
   }
 
   Future<void> _savePref(String key, dynamic value) async {
+    if (key == 'guidAuthKey') {
+      if (value == null || (value is String && value.isEmpty)) {
+        await _secureStorage.delete(key: key);
+      } else {
+        await _secureStorage.write(key: key, value: value);
+      }
+      await ss.prefs.remove(key);
+      return;
+    }
     if (value is bool) {
       await ss.prefs.setBool(key, value);
     } else if (value is String) {
@@ -245,13 +257,23 @@ class Settings {
     return this;
   }
 
-  static Settings getSettings() {
+  static Future<Settings> getSettings() async {
     Set<String> keys = ss.prefs.getKeys();
 
     Map<String, dynamic> items = {};
     for (String s in keys) {
       items[s] = ss.prefs.get(s);
     }
+
+    String? secureKey = await _secureStorage.read(key: 'guidAuthKey');
+    String? oldKey = ss.prefs.getString('guidAuthKey');
+    if (secureKey == null && oldKey != null) {
+      await _secureStorage.write(key: 'guidAuthKey', value: oldKey);
+      await ss.prefs.remove('guidAuthKey');
+      secureKey = oldKey;
+    }
+    items['guidAuthKey'] = secureKey ?? '';
+
     if (items.isNotEmpty) {
       return Settings.fromMap(items);
     } else {

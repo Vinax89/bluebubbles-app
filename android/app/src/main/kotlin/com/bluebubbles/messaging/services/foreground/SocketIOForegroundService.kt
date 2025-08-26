@@ -12,6 +12,8 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import com.bluebubbles.messaging.Constants
 import com.bluebubbles.messaging.R
 import com.bluebubbles.messaging.services.backend_ui_interop.DartWorkManager
@@ -63,8 +65,25 @@ class SocketIOForegroundService : Service() {
             val prefs = applicationContext.getSharedPreferences("FlutterSharedPreferences", 0)
             val serverUrl: String? = prefs.getString("flutter.serverAddress", null)
             val keepAppAlive: Boolean = prefs.getBoolean("flutter.keepAppAlive", false)
-            val storedPassword: String? = prefs.getString("flutter.guidAuthKey", null)
             val customHeaders: String? = prefs.getString("flutter.customHeaders", null)
+
+            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val securePrefs = EncryptedSharedPreferences.create(
+                "FlutterSecureStorage",
+                masterKeyAlias,
+                applicationContext,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+            var storedPassword: String? = securePrefs.getString("guidAuthKey", null)
+            if (storedPassword == null) {
+                val legacy = prefs.getString("flutter.guidAuthKey", null)
+                if (legacy != null) {
+                    securePrefs.edit().putString("guidAuthKey", legacy).apply()
+                    prefs.edit().remove("flutter.guidAuthKey").apply()
+                    storedPassword = legacy
+                }
+            }
 
             // Make sure the user has enabled the service
             if (!keepAppAlive) {
