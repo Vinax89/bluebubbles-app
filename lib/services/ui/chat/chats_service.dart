@@ -14,6 +14,7 @@ import 'package:get/get.dart' hide Response;
 import 'package:tuple/tuple.dart';
 import 'package:universal_io/io.dart';
 import 'package:bluebubbles/database/database.dart';
+import 'package:objectbox/objectbox.dart';
 
 ChatsService chats = Get.isRegistered<ChatsService>() ? Get.find<ChatsService>() : Get.put(ChatsService());
 
@@ -179,22 +180,30 @@ class ChatsService extends GetxService {
     chats.removeAt(index);
   }
 
-  void markAllAsRead() {
+  Future<void> markAllAsRead() async {
     final _chats = Database.chats.query(Chat_.hasUnreadMessage.equals(true)).build().find();
+    final futures = <Future>[];
     for (Chat c in _chats) {
       c.hasUnreadMessage = false;
-      mcs.invokeMethod(
-        "delete-notification",
-        {
-          "notification_id": c.id,
-          "tag": NotificationsService.NEW_MESSAGE_TAG
-        }
-      );
       if (ss.settings.enablePrivateAPI.value && ss.settings.privateMarkChatAsRead.value) {
-        http.markChatRead(c.guid);
+        futures.add(http.markChatRead(c.guid));
       }
     }
-    Database.chats.putMany(_chats);
+
+    Database.runInTransaction(TxMode.write, () {
+      Database.chats.putMany(_chats);
+    });
+
+    await Future.wait(futures);
+
+    final notificationFutures = _chats.map((c) => mcs.invokeMethod(
+          "delete-notification",
+          {
+            "notification_id": c.id,
+            "tag": NotificationsService.NEW_MESSAGE_TAG
+          },
+        ));
+    await Future.wait(notificationFutures);
   }
 
   void updateChatPinIndex(int oldIndex, int newIndex) {
