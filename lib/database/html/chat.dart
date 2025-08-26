@@ -203,7 +203,7 @@ class Chat {
     return title!;
   }
 
-  /// Get a chat's title
+  /// Generate a subtitle for a chat creator
   String getChatCreatorSubtitle() {
     // generate names for group chats or DMs
     List<String> titles = participants.map((e) => e.displayName.trim().split(isGroup && e.contact != null ? " " : String.fromCharCode(65532)).first).toList();
