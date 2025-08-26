@@ -29,12 +29,21 @@ class AttachmentDownloadService extends GetxService {
     return _downloaders.values.flattened.firstWhereOrNull((element) => element.attachment.guid == guid);
   }
 
-  AttachmentDownloadController startDownload(Attachment a, {Function(PlatformFile)? onComplete, Function? onError}) {
-    return Get.put(AttachmentDownloadController(
-      attachment: a,
-      onComplete: onComplete,
-      onError: onError,
-    ), tag: a.guid!);
+  /// Begin downloading [Attachment] [a]. When [original] is true, the
+  /// uncompressed version of the attachment will be retrieved.
+  AttachmentDownloadController startDownload(Attachment a,
+      {Function(PlatformFile)? onComplete,
+      Function? onError,
+      bool original = false}) {
+    return Get.put(
+      AttachmentDownloadController(
+        attachment: a,
+        onComplete: onComplete,
+        onError: onError,
+        original: original,
+      ),
+      tag: a.guid!,
+    );
   }
 
   void _addToQueue(AttachmentDownloadController downloader) {
@@ -80,6 +89,7 @@ class AttachmentDownloadController extends GetxController {
   final RxnNum progress = RxnNum();
   final Rxn<PlatformFile> file = Rxn<PlatformFile>();
   final RxBool error = RxBool(false);
+  final bool original;
   Stopwatch stopwatch = Stopwatch();
   bool isFetching = false;
 
@@ -87,6 +97,7 @@ class AttachmentDownloadController extends GetxController {
     required this.attachment,
     Function(PlatformFile)? onComplete,
     Function? onError,
+    this.original = false,
   }) {
     if (onComplete != null) completeFuncs.add(onComplete);
     if (onError != null) errorFuncs.add(onError);
@@ -103,7 +114,9 @@ class AttachmentDownloadController extends GetxController {
     isFetching = true;
     stopwatch.start();
     var response = await http.downloadAttachment(attachment.guid!,
-        onReceiveProgress: (count, total) => setProgress(kIsWeb ? (count / total) : (count / attachment.totalBytes!))).catchError((err) async {
+        original: original,
+        onReceiveProgress: (count, total) =>
+            setProgress(kIsWeb ? (count / total) : (count / attachment.totalBytes!))).catchError((err) async {
       if (!kIsWeb) {
         File file = File(attachment.path);
         if (await file.exists()) {
