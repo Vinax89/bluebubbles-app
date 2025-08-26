@@ -67,7 +67,7 @@ Future<void> clearServerUrl(
 Future<bool> disableBatteryOptimizations() async {
   bool? isDisabled = await DisableBatteryOptimization.isAllBatteryOptimizationDisabled;
 
-  // If battery optomizations are already disabled, return true
+  // If battery optimizations are already disabled, return true
   if (isDisabled == true) return true;
 
   // If optimizations are not disabled, prompt the user to disable them
