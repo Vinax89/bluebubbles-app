@@ -71,6 +71,26 @@ class _TroubleshootPanelState extends OptimizedState<TroubleshootPanel> {
           SliverList(
             delegate: SliverChildListDelegate(
               <Widget>[
+                SettingsSection(
+                  backgroundColor: tileColor,
+                  children: [
+                    Obx(() => SettingsSwitch(
+                          initialVal: ss.settings.simulateServerDelay.value,
+                          onChanged: (bool val) async {
+                            ss.settings.simulateServerDelay.value = val;
+                            await ss.settings.saveOne('simulateServerDelay');
+                          },
+                          title: "Simulate Slow Server",
+                          subtitle: "Adds a delay to network requests",
+                          backgroundColor: tileColor,
+                          leading: const SettingsLeadingIcon(
+                            iosIcon: CupertinoIcons.timer,
+                            materialIcon: Icons.timer,
+                            containerColor: Colors.orange,
+                          ),
+                        )),
+                  ],
+                ),
                 if (isWebOrDesktop)
                   SettingsSection(
                     backgroundColor: tileColor,

@@ -71,6 +71,7 @@ class Settings {
   final RxBool askWhereToSave = false.obs;
   final RxBool statusIndicatorsOnChats = false.obs;
   final RxInt apiTimeout = 30000.obs;
+  final RxBool simulateServerDelay = false.obs;
   final RxBool allowUpsideDownRotation = false.obs;
   final RxBool cancelQueuedMessages = false.obs;
   final RxBool repliesToPrevious = false.obs;
@@ -312,6 +313,7 @@ class Settings {
       'askWhereToSave': askWhereToSave.value,
       'indicatorsOnPinnedChats': statusIndicatorsOnChats.value,
       'apiTimeout': apiTimeout.value,
+      'simulateServerDelay': simulateServerDelay.value,
       'allowUpsideDownRotation': allowUpsideDownRotation.value,
       'cancelQueuedMessages': cancelQueuedMessages.value,
       'repliesToPrevious': repliesToPrevious.value,
@@ -439,6 +441,7 @@ class Settings {
     ss.settings.askWhereToSave.value = map['askWhereToSave'] ?? false;
     ss.settings.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     ss.settings.apiTimeout.value = map['apiTimeout'] ?? 15000;
+    ss.settings.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
     ss.settings.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;
     ss.settings.cancelQueuedMessages.value = map['cancelQueuedMessages'] ?? false;
     ss.settings.repliesToPrevious.value = map['repliesToPrevious'] ?? false;
@@ -577,6 +580,7 @@ class Settings {
     s.askWhereToSave.value = map['askWhereToSave'] ?? false;
     s.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     s.apiTimeout.value = map['apiTimeout'] ?? 15000;
+    s.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
     s.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;
     s.cancelQueuedMessages.value = map['cancelQueuedMessages'] ?? false;
     s.repliesToPrevious.value = map['repliesToPrevious'] ?? false;
