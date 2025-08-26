@@ -34,6 +34,7 @@ import 'package:google_ml_kit/google_ml_kit.dart' hide Message;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:path/path.dart' show join;
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -107,13 +108,32 @@ Future<Exception?> _initServices(bool bubble, List<String> arguments) async {
     await initializeDateFormatting();
     MediaKit.ensureInitialized();
     if (!ss.settings.finishedSetup.value && !kIsWeb && !kIsDesktop) {
-      runApp(MaterialApp(
-          home: SplashScreen(shouldNavigate: false),
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSwatch(
-                backgroundColor:
-                    PlatformDispatcher.instance.platformBrightness == Brightness.dark ? Colors.black : Colors.white),
-          )));
+      runApp(
+        DynamicColorBuilder(
+          builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+            final brightness = PlatformDispatcher.instance.platformBrightness;
+            final ColorScheme scheme;
+            if (brightness == Brightness.dark && darkDynamic != null) {
+              scheme = darkDynamic.harmonized();
+            } else if (brightness == Brightness.light && lightDynamic != null) {
+              scheme = lightDynamic.harmonized();
+            } else {
+              scheme = ColorScheme.fromSeed(
+                seedColor: Colors.blue,
+                brightness: brightness,
+              );
+            }
+
+            return MaterialApp(
+              home: SplashScreen(shouldNavigate: false),
+              theme: ThemeData(
+                colorScheme: scheme,
+                useMaterial3: true,
+              ),
+            );
+          },
+        ),
+      );
     }
     fs.checkFont();
   }, "Failure during app initialization!");
