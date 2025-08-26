@@ -10,20 +10,43 @@ Future<bool> saveNewServerUrl(
     bool tryRestartForegroundService = true,
     bool restartSocket = true,
     bool force = false,
-    List<String> saveAdditionalSettings = const []
+    List<String> saveAdditionalSettings = const [],
+    bool? chaosMode,
+    bool? stressMode,
   }
 ) async {
   String sanitized = sanitizeServerAddress(address: newServerUrl)!;
-  if (force || sanitized != ss.settings.serverAddress.value) {
-    ss.settings.serverAddress.value = sanitized;
 
-    await ss.settings.saveMany(["serverAddress", ...saveAdditionalSettings]);
+  bool didChange = force || sanitized != ss.settings.serverAddress.value;
+  bool flagsChanged = false;
+
+  if (chaosMode != null && chaosMode != ss.settings.chaosMode.value) {
+    ss.settings.chaosMode.value = chaosMode;
+    flagsChanged = true;
+  }
+
+  if (stressMode != null && stressMode != ss.settings.stressMode.value) {
+    ss.settings.stressMode.value = stressMode;
+    flagsChanged = true;
+  }
+
+  if (didChange) {
+    ss.settings.serverAddress.value = sanitized;
+  }
+
+  if (didChange || flagsChanged) {
+    await ss.settings.saveMany([
+      if (didChange) "serverAddress",
+      if (chaosMode != null) "chaosMode",
+      if (stressMode != null) "stressMode",
+      ...saveAdditionalSettings,
+    ]);
 
     // Don't await because we don't care about the result
     if (tryRestartForegroundService) {
       restartForegroundService();
     }
-    
+
     try {
       if (restartSocket) {
         socket.restartSocket();

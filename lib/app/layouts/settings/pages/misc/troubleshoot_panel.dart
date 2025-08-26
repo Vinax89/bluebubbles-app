@@ -140,6 +140,39 @@ class _TroubleshootPanelState extends OptimizedState<TroubleshootPanel> {
                       ),
                     ],
                   ),
+                SettingsHeader(
+                    iosSubtitle: iosSubtitle,
+                    materialSubtitle: materialSubtitle,
+                    text: "Testing"),
+                SettingsSection(backgroundColor: tileColor, children: [
+                  Obx(() => SettingsSwitch(
+                        initialVal: ss.settings.chaosMode.value,
+                        title: "Chaos Mode",
+                        subtitle:
+                            "Introduce random failures to test error handling",
+                        backgroundColor: tileColor,
+                        onChanged: (bool val) async {
+                          await saveNewServerUrl(ss.settings.serverAddress.value,
+                              chaosMode: val,
+                              restartSocket: true,
+                              tryRestartForegroundService: false);
+                        },
+                      )),
+                  const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
+                  Obx(() => SettingsSwitch(
+                        initialVal: ss.settings.stressMode.value,
+                        title: "Stress Mode",
+                        subtitle:
+                            "Enable heavy load scenarios for performance testing",
+                        backgroundColor: tileColor,
+                        onChanged: (bool val) async {
+                          await saveNewServerUrl(ss.settings.serverAddress.value,
+                              stressMode: val,
+                              restartSocket: true,
+                              tryRestartForegroundService: false);
+                        },
+                      )),
+                ]),
                 if (isWebOrDesktop)
                   SettingsHeader(
                       iosSubtitle: iosSubtitle,
