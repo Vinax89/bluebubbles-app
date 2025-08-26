@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
 
 /// Take the passed [address] or serverAddress from Settings
-/// and sanitize it, making sure it includes an http schema
+/// and sanitize it, ensuring it includes an HTTP or HTTPS scheme.
+/// Uses HTTPS for ngrok.io, trycloudflare.com, and zrok.io addresses; otherwise HTTP.
 String? sanitizeServerAddress({String? address}) {
   String serverAddress = address ?? http.origin;
 
