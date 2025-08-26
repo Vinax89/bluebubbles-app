@@ -18,6 +18,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:store_checker/store_checker.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:tuple/tuple.dart';
 import 'package:universal_io/io.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -46,7 +47,9 @@ class SettingsService extends GetxService {
         if (mode != DisplayMode.auto) {
           FlutterDisplayMode.setPreferredMode(mode);
         }
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to initialize display settings', error: e, trace: s);
+      }
       // system appearance
       if (settings.immersiveMode.value) {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -63,7 +66,9 @@ class SettingsService extends GetxService {
       if (Platform.isWindows) {
         try {
           _canAuthenticate = await LocalAuthentication().isDeviceSupported();
-        } catch (_) {}
+        } catch (e, s) {
+          Logger.error('Failed to check authentication support', error: e, trace: s);
+        }
       }
       ss.settings.launchAtStartup.value = await setupLaunchAtStartup(ss.settings.launchAtStartup.value, ss.settings.launchAtStartupMinimized.value);
     }
@@ -129,7 +134,9 @@ class SettingsService extends GetxService {
       try {
         final mode = await settings.getDisplayMode();
         FlutterDisplayMode.setPreferredMode(mode);
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to update display mode', error: e, trace: s);
+      }
     }
   }
 

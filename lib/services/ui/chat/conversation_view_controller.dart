@@ -16,6 +16,7 @@ import 'package:metadata_fetch/metadata_fetch.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:tuple/tuple.dart';
 import 'package:universal_io/io.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 ConversationViewController cvc(Chat chat, {String? tag}) => Get.isRegistered<ConversationViewController>(tag: tag ?? chat.guid)
 ? Get.find<ConversationViewController>(tag: tag ?? chat.guid) : Get.put(ConversationViewController(chat, tag_: tag), tag: tag ?? chat.guid);
@@ -213,7 +214,9 @@ class ConversationViewController extends StatefulController with GetSingleTicker
     imageData[attachment.guid!] = tmpData;
     try {
       await precacheImage(MemoryImage(tmpData), queued.item3);
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to precache image', error: e, trace: s);
+    }
     queued.item4.complete(tmpData);
 
     await _processNextImage();

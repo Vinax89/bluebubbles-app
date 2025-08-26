@@ -12,6 +12,7 @@ import 'package:mime_type/mime_type.dart';
 // ignore: unnecessary_import
 import 'package:objectbox/objectbox.dart';
 import 'package:universal_io/io.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 @Entity()
 class Attachment {
@@ -72,7 +73,9 @@ class Attachment {
     if (metadata is String && metadata.isNotEmpty) {
       try {
         metadata = jsonDecode(metadata);
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to parse attachment metadata!', error: e, trace: s);
+      }
     }
 
     return Attachment(
@@ -110,7 +113,9 @@ class Attachment {
         }
 
         id = Database.attachments.put(this);
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save attachment due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }
@@ -137,7 +142,9 @@ class Attachment {
         for (int i = 0; i < attachments.length; i++) {
           attachments[i].id = ids[i];
         }
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to bulk save attachments due to unique constraint', error: e, trace: s);
+      }
     });
   }
 

@@ -392,7 +392,9 @@ class Message {
       if (json["metadata"] is String) {
         try {
           metadata = jsonDecode(json["metadata"]);
-        } catch (_) {}
+        } catch (e, s) {
+          Logger.error('Failed to parse metadata!', error: e, trace: s);
+        }
       } else {
         metadata = json["metadata"]?.cast<String, Object>();
       }
@@ -492,7 +494,9 @@ class Message {
       try {
         if (chat != null) this.chat.target = chat;
         id = Database.messages.put(this);
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save message due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }
@@ -558,7 +562,9 @@ class Message {
         for (int i = 0; i < messages.length; i++) {
           messages[i].id = ids[i];
         }
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to bulk save messages due to unique constraint', error: e, trace: s);
+      }
     });
     return messages;
   }

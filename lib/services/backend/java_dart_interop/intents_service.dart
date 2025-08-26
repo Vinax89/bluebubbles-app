@@ -142,7 +142,9 @@ class IntentsService extends GetxService {
     try {
       final call = await http.answerFaceTime(callUuid);
       link = call.data?["data"]?["link"];
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to answer FaceTime call', error: e, trace: s);
+    }
     if (Get.context != null) {
       Navigator.of(Get.context!).pop();
     }
