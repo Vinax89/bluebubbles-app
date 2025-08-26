@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
@@ -6,6 +7,7 @@ import 'package:bluebubbles/database/html/attachment.dart';
 import 'package:bluebubbles/database/html/handle.dart';
 import 'package:bluebubbles/database/html/message.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/utils/crypto_utils.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -45,6 +47,21 @@ String getFullChatTitle(Chat _chat) {
   }
 
   return title!;
+}
+
+Map<String, dynamic> encryptChatPayload(Map<String, dynamic> payload) {
+  if (socket.sessionKey == null) return payload;
+  return {
+    'encrypted': true,
+    'data': encryptWithSessionKey(jsonEncode(payload), socket.sessionKey!)
+  };
+}
+
+Map<String, dynamic> decryptChatPayload(Map<String, dynamic> payload) {
+  if (payload['encrypted'] == true && socket.sessionKey != null) {
+    return jsonDecode(decryptWithSessionKey(payload['data'], socket.sessionKey!));
+  }
+  return payload;
 }
 
 class Chat {
@@ -139,6 +156,9 @@ class Chat {
   }
 
   factory Chat.fromMap(Map<String, dynamic> json) {
+    if (json['encrypted'] == true) {
+      json = decryptChatPayload(json);
+    }
     final message = json['lastMessage'] != null ? Message.fromMap(json['lastMessage']) : null;
     return Chat(
       id: json["ROWID"] ?? json["id"],
@@ -463,7 +483,7 @@ class Chat {
     this.autoSendTypingIndicators = autoSendTypingIndicators;
     save(updateAutoSendTypingIndicators: true);
     if (!(autoSendTypingIndicators ?? ss.settings.privateSendTypingIndicators.value)) {
-      socket.sendMessage("stopped-typing", {"chatGuid": guid});
+      socket.sendMessage("stopped-typing", encryptChatPayload({"chatGuid": guid}));
     }
     return this;
   }
@@ -580,4 +600,6 @@ class Chat {
     "lockChatIcon": lockChatIcon,
     "lastReadMessageGuid": lastReadMessageGuid,
   };
+
+  Map<String, dynamic> toEncryptedMap() => encryptChatPayload(toMap());
 }
