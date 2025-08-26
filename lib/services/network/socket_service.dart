@@ -21,12 +21,26 @@ enum SocketState {
   connecting,
 }
 
+class ReconnectMetric {
+  ReconnectMetric({required this.duration, required this.retryCount, required this.timestamp});
+
+  final Duration duration;
+  final int retryCount;
+  final DateTime timestamp;
+}
+
 class SocketService extends GetxService {
   final Rx<SocketState> state = SocketState.disconnected.obs;
   SocketState _lastState = SocketState.disconnected;
   RxString lastError = "".obs;
   Timer? _reconnectTimer;
   late Socket socket;
+
+  DateTime? _lastDisconnect;
+  DateTime? _lastConnect;
+  int _retryCount = 0;
+  final StreamController<ReconnectMetric> _metricsController = StreamController.broadcast();
+  Stream<ReconnectMetric> get metricsStream => _metricsController.stream;
 
   String get serverAddress => http.origin;
   String get password => ss.settings.guidAuthKey.value;
@@ -51,6 +65,7 @@ class SocketService extends GetxService {
   @override
   void onClose() {
     closeSocket();
+    _metricsController.close();
     super.onClose();
   }
 
@@ -155,17 +170,35 @@ class SocketService extends GetxService {
         _reconnectTimer = null;
         NetworkTasks.onConnect();
         notif.clearSocketError();
+        final now = DateTime.now();
+        _lastConnect = now;
+        if (_lastDisconnect != null) {
+          final duration = now.difference(_lastDisconnect!);
+          Logger.info("Socket reconnected in ${duration.inMilliseconds} ms after $_retryCount retries");
+          _metricsController.add(ReconnectMetric(duration: duration, retryCount: _retryCount, timestamp: now));
+          _lastDisconnect = null;
+          _retryCount = 0;
+        }
         return;
       case SocketState.disconnected:
         Logger.info("Disconnected from socket...");
         state.value = SocketState.disconnected;
+        _lastDisconnect = DateTime.now();
+        _retryCount = 0;
         return;
       case SocketState.connecting:
         Logger.info("Connecting to socket...");
         state.value = SocketState.connecting;
+        if (_lastDisconnect != null) {
+          _retryCount++;
+        }
         return;
       case SocketState.error:
         Logger.info("Socket connect error, fetching new URL...");
+
+        if (_lastDisconnect != null) {
+          _retryCount++;
+        }
 
         if (data is SocketException) {
           handleSocketException(data);
