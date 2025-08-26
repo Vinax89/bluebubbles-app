@@ -14,4 +14,4 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: flutter test --dart-define=ENABLE_FLOOD_TEST=true
+      - run: flutter test --tags integration --dart-define=ENABLE_FLOOD_TEST=true
