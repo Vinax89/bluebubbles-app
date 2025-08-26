@@ -22,6 +22,7 @@ class Message {
   int? handleId;
   int? otherHandle;
   String? text;
+  String? audioTranscript;
   String? subject;
   String? country;
   DateTime? dateCreated;
@@ -82,6 +83,7 @@ class Message {
     this.handleId,
     this.otherHandle,
     this.text,
+    this.audioTranscript,
     this.subject,
     this.country,
     int? error,
@@ -175,6 +177,7 @@ class Message {
       handleId: json["handleId"] ?? 0,
       otherHandle: json["otherHandle"],
       text: sanitizeString(json["text"] ?? attributedBody.firstOrNull?.string),
+      audioTranscript: json['audioTranscript'],
       subject: json["subject"],
       country: json["country"],
       error: json["_error"] ?? 0,
@@ -306,7 +309,8 @@ class Message {
     return;
   }
 
-  String get fullText => sanitizeString([subject, text].where((e) => !isNullOrEmpty(e)).join("\n"));
+  String get fullText => sanitizeString(
+      [subject, text, audioTranscript].where((e) => !isNullOrEmpty(e)).join("\n"));
 
   // first condition is for macOS < 11 and second condition is for macOS >= 11
   bool get isLegacyUrlPreview => (balloonBundleId == "com.apple.messages.URLBalloonProvider" && hasDdResults!)

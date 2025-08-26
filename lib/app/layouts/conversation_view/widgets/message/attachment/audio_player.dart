@@ -57,7 +57,7 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
     super.initState();
     if (attachment != null)
       controller = cvController?.audioPlayers[attachment!.guid];
-    _transcript = widget.transcript;
+    _transcript = widget.transcript ?? widget.message?.audioTranscript;
     if (_transcript == null && ss.settings.enableAudioTranscription.value) {
       _initTranscription();
     }
@@ -103,8 +103,13 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
       if (widget.message != null && widget.part != null) {
         final cached =
             getAudioTranscriptsFromAttributedBody(widget.message!.attributedBody)[widget.part!];
+        final direct = widget.message!.audioTranscript;
         if (cached != null) {
           setState(() => _transcript = cached);
+          return;
+        }
+        if (direct != null) {
+          setState(() => _transcript = direct);
           return;
         }
       }
@@ -126,6 +131,7 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
     }
     widget.message!.attributedBody.first.runs.add(
         Run(range: [0, 0], attributes: Attributes(messagePart: widget.part, audioTranscript: text)));
+    widget.message!.audioTranscript = text;
     widget.message!.save();
   }
 
