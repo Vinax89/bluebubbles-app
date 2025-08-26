@@ -96,11 +96,13 @@ Future<void> initializeApp(bool bubble, List<String> arguments) async {
 Future<Exception?> _initServices(bool bubble, List<String> arguments) async {
   return await _captureError(() async {
     await StartupTasks.initStartupServices(isBubble: bubble);
-    StartupTasks.onStartup().then((_) {
+    try {
+      await StartupTasks.onStartup();
       Logger.info("Startup tasks completed");
-    }).catchError((e, s) {
+    } catch (e, s) {
       Logger.error("Failed to complete startup tasks!", error: e, trace: s);
-    });
+      rethrow;
+    }
     await initializeDateFormatting();
     MediaKit.ensureInitialized();
     if (!ss.settings.finishedSetup.value && !kIsWeb && !kIsDesktop) {

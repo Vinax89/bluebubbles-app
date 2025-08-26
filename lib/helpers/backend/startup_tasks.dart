@@ -19,6 +19,9 @@ class StartupTasks {
 
   static final Completer<void> uiReady = Completer<void>();
 
+  /// Allows tests to override [onStartup] with custom behavior.
+  static Future<void> Function()? onStartupOverride;
+
   static Timer? _updateCheckTimer;
   static Timer? _reviewRequestTimer;
 
@@ -99,45 +102,53 @@ class StartupTasks {
   }
 
   static Future<void> onStartup() async {
+    if (onStartupOverride != null) {
+      return await onStartupOverride!();
+    }
     if (!ss.settings.finishedSetup.value) return;
 
     dispose();
 
-    if (!kIsDesktop) {
-      chats.init();
-      socket;
-    }
-
-    // Fetch server details for the rest of the app.
-    // We only need to fetch it on startup since the metadata shouldn't change.
-    await ss.getServerDetails(refresh: true);
-
-    // Only register FCM device on startup
-    await fcm.registerDevice();
-
-    // We don't need to check for updates immediately, so delay it so other
-    // code has a chance to run and we don't block the UI thread.
-    _updateCheckTimer = Timer(const Duration(seconds: 30), () {
-      try {
-        ss.checkServerUpdate();
-      } catch (ex, stack) {
-        Logger.warn("Failed to check for server update!", error: ex, trace: stack);
+    try {
+      if (!kIsDesktop) {
+        chats.init();
+        socket;
       }
 
-      try {
-        ss.checkClientUpdate();
-      } catch (ex, stack) {
-        Logger.warn("Failed to check for client update!", error: ex, trace: stack);
-      }
-    });
+      // Fetch server details for the rest of the app.
+      // We only need to fetch it on startup since the metadata shouldn't change.
+      await ss.getServerDetails(refresh: true);
 
-    // Check if we need to request a review
-    if (Platform.isAndroid) {
-      _reviewRequestTimer = Timer(const Duration(minutes: 1), () async {
-        await reviewFlow();
+      // Only register FCM device on startup
+      await fcm.registerDevice();
+
+      // We don't need to check for updates immediately, so delay it so other
+      // code has a chance to run and we don't block the UI thread.
+      _updateCheckTimer = Timer(const Duration(seconds: 30), () {
+        try {
+          ss.checkServerUpdate();
+        } catch (ex, stack) {
+          Logger.warn("Failed to check for server update!", error: ex, trace: stack);
+        }
+
+        try {
+          ss.checkClientUpdate();
+        } catch (ex, stack) {
+          Logger.warn("Failed to check for client update!", error: ex, trace: stack);
+        }
       });
+
+      // Check if we need to request a review
+      if (Platform.isAndroid) {
+        _reviewRequestTimer = Timer(const Duration(minutes: 1), () async {
+          await reviewFlow();
+        });
+      }
+      onExit(dispose);
+    } catch (e, s) {
+      Logger.error("Failed to run startup tasks!", error: e, trace: s);
+      rethrow;
     }
-    onExit(dispose);
   }
 
   static Future<void> checkInstanceLock() async {
