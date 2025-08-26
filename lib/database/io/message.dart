@@ -210,7 +210,7 @@ class BulkSaveNewMessages extends AsyncTask<List<dynamic>, List<Message>> {
       try {
         Database.messages.putMany(messagesToUpdate.values.toList());
       } catch (ex) {
-        print('Failed to put associated messages into DB: ${ex.toString()}');
+        Logger.error('Failed to put associated messages into DB', error: ex);
       }
     }
   }
