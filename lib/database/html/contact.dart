@@ -39,7 +39,7 @@ class Contact {
   }
 
   static List<Contact> getContacts() {
-    return [];
+    return <Contact>[];
   }
 
   Contact save() {

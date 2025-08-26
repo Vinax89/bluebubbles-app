@@ -48,12 +48,10 @@ class ThemeStruct {
   }
 
   static ThemeStruct getLightTheme() {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     return ts.defaultThemes[1];
   }
 
   static ThemeStruct getDarkTheme() {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     return ts.defaultThemes[0];
   }
 
@@ -62,7 +60,6 @@ class ThemeStruct {
   }
 
   static List<ThemeStruct> getThemes() {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     return ts.defaultThemes;
   }
 

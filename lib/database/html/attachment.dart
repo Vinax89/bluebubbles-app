@@ -98,7 +98,7 @@ class Attachment {
   /// Find all attachments matching a specified condition, or all attachments
   /// if no condition is provided
   static List<Attachment> find({dynamic cond}) {
-    return [];
+    return <Attachment>[];
   }
 
   /// Delete an attachment and remove all instances of that attachment in the DB

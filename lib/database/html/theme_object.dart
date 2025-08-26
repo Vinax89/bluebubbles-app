@@ -48,7 +48,6 @@ class ThemeObject {
       ];
 
   static List<ThemeObject> getThemes() {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     return <ThemeObject>[];
   }
 
