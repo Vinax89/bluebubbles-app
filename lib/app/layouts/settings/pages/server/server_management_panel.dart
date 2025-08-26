@@ -68,7 +68,8 @@ class ServerManagementPanelController extends StatefulController {
     await http.ping();
     int later = DateTime.now().toUtc().millisecondsSinceEpoch;
     latency.value = later - now;
-    http.serverInfo().then((response) {
+    try {
+      final response = await http.serverInfo();
       macOSVersion.value = response.data['data']['os_version'];
       serverVersion.value = response.data['data']['server_version'];
       Version version = Version.parse(serverVersion.value!);
@@ -80,26 +81,29 @@ class ServerManagementPanelController extends StatefulController {
       timeSync.value = response.data['data']['macos_time_sync'];
       hasCheckedStats.value = true;
 
-      final subsequentRequests = <Future>[];
-
-      subsequentRequests.add(http.serverStatTotals().then((response) {
+      final totalsFuture = http.serverStatTotals().then((response) {
         if (response.data['status'] == 200) {
           stats.addAll(response.data['data'] ?? {});
-          http.serverStatMedia().then((response) {
-            if (response.data['status'] == 200) {
-              stats.addAll(response.data['data'] ?? {});
-            }
-          });
         }
       }).catchError((_) {
-        showSnackbar("Error", "Failed to load server statistics!");
-      }));
+        showSnackbar("Error", "Failed to load total statistics!");
+      });
 
-      Future.wait(subsequentRequests).whenComplete(() => opacity.value = 1.0);
-    }).catchError((_) {
+      final mediaFuture = http.serverStatMedia().then((response) {
+        if (response.data['status'] == 200) {
+          stats.addAll(response.data['data'] ?? {});
+        }
+      }).catchError((_) {
+        showSnackbar("Error", "Failed to load media statistics!");
+      });
+
+      await Future.wait([totalsFuture, mediaFuture]);
+    } catch (_) {
       showSnackbar("Error", "Failed to load server details!");
       hasCheckedStats.value = null;
-    });
+    } finally {
+      opacity.value = 1.0;
+    }
   }
 }
 
