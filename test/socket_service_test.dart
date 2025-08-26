@@ -3,25 +3,51 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 import 'package:bluebubbles/services/network/socket_service.dart';
+import 'package:bluebubbles/utils/crypto_utils.dart';
+import 'package:pointycastle/export.dart';
 
 /// Environment flag to enable the socket stress tests.
 const bool runSocketStressTest = bool.fromEnvironment('ENABLE_FLOOD_TEST', defaultValue: false);
 
 class MockSocket {
   final Map<String, Function> _handlers = {};
+  Map<String, dynamic>? lastMessage;
+  final String sessionKey = 'server-session';
 
   void on(String event, Function(dynamic) handler) {
     _handlers[event] = handler;
   }
 
   void emitWithAck(String event, Map<String, dynamic> message, {Function? ack}) {
-    // Immediately return the message in the ack to simulate server response
-    if (ack != null) {
-      Future.microtask(() => ack({
-            'status': 'ok',
-            'encrypted': false,
-            'data': message,
-          }));
+    lastMessage = message;
+    if (event == 'handshake') {
+      final n = BigInt.parse(message['n'], radix: 16);
+      final e = BigInt.parse(message['e'], radix: 16);
+      final pub = RSAPublicKey(n, e);
+      final encrypted = rsaEncrypt(sessionKey, pub);
+      if (ack != null) {
+        Future.microtask(() => ack({'sessionKey': encrypted}));
+      }
+      return;
+    }
+
+    if (message['encrypted'] == true) {
+      final decrypted = decryptWithSessionKey(message['data'], sessionKey);
+      if (ack != null) {
+        Future.microtask(() => ack({
+              'status': 'ok',
+              'encrypted': true,
+              'data': encryptWithSessionKey(decrypted, sessionKey),
+            }));
+      }
+    } else {
+      if (ack != null) {
+        Future.microtask(() => ack({
+              'status': 'ok',
+              'encrypted': false,
+              'data': message,
+            }));
+      }
     }
   }
 
@@ -76,5 +102,18 @@ void main() {
     expect(responses.length, 50);
     expect(service.state.value, SocketState.disconnected);
   }, skip: !runSocketStressTest);
+
+  test('SocketService performs key exchange and encrypts messages', () async {
+    final service = TestSocketService();
+    final mock = MockSocket();
+    service.socket = mock;
+    await service.performKeyExchange();
+    expect(service.sessionKey, mock.sessionKey);
+
+    final response = await service.sendMessage('event', {'foo': 'bar'});
+    expect(mock.lastMessage?['encrypted'], true);
+    expect(response['encrypted'], true);
+    expect(response['data']['foo'], 'bar');
+  });
 }
 

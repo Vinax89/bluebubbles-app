@@ -13,6 +13,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:pointycastle/export.dart';
 
 SocketService socket = Get.isRegistered<SocketService>() ? Get.find<SocketService>() : Get.put(SocketService());
 
@@ -37,6 +38,9 @@ class SocketService extends GetxService {
   RxString lastError = "".obs;
   Timer? _reconnectTimer;
   late Socket socket;
+
+  AsymmetricKeyPair<RSAPublicKey, RSAPrivateKey>? _keyPair;
+  String? sessionKey;
 
   String? _deviceId;
 
@@ -137,6 +141,7 @@ class SocketService extends GetxService {
     socket.on("chat-read-status-changed", (data) => ah.handleEvent("chat-read-status-changed", data, 'DartSocket'));
     socket.on("imessage-aliases-removed", (data) => ah.handleEvent("imessage-aliases-removed", data, 'DartSocket'));
 
+    socket.onConnect((_) => performKeyExchange());
     socket.connect();
   }
 
@@ -174,9 +179,16 @@ class SocketService extends GetxService {
 
     await _ensureSession();
 
+    if (sessionKey != null && message['encrypted'] != true) {
+      message = {
+        'encrypted': true,
+        'data': encryptWithSessionKey(jsonEncode(message), sessionKey!)
+      };
+    }
+
     socket.emitWithAck(event, message, ack: (response) {
-      if (response['encrypted'] == true) {
-        response['data'] = jsonDecode(decryptAES(response['data'], password));
+      if (response['encrypted'] == true && sessionKey != null) {
+        response['data'] = jsonDecode(decryptWithSessionKey(response['data'], sessionKey!));
       }
 
       if (!completer.isCompleted) {
@@ -184,6 +196,23 @@ class SocketService extends GetxService {
       }
     });
 
+    return completer.future;
+  }
+
+  Future<void> performKeyExchange() async {
+    _keyPair = generateRSAKeyPair();
+    final pub = _keyPair!.publicKey;
+    Completer<void> completer = Completer();
+    socket.emitWithAck(
+      'handshake',
+      {'n': pub.modulus!.toRadixString(16), 'e': pub.exponent!.toRadixString(16)},
+      ack: (resp) {
+        if (resp != null && resp['sessionKey'] != null) {
+          sessionKey = rsaDecrypt(resp['sessionKey'], _keyPair!.privateKey);
+        }
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
     return completer.future;
   }
 
