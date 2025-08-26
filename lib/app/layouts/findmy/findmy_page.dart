@@ -399,15 +399,15 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                             ? () async {
                                 await panelController.close();
                                 await completer.future;
-                                final marker = markers.values.firstWhere((e) =>
+                                final marker = markers.values.firstWhereOrNull((e) =>
                                     e.point.latitude == item.location?.latitude &&
                                     e.point.longitude == item.location?.longitude);
-                                popupController.showPopupsOnlyFor([marker]);
-                                mapController.move(LatLng(item.location!.latitude!, item.location!.longitude!), 10);
-                              }
-                            : null,
-                        trailing: item.location?.latitude != null && item.location?.longitude != null ? ButtonTheme(
-                          minWidth: 1,
+                                if (marker != null) {
+                                  popupController.showPopupsOnlyFor([marker]);
+                                }
+                                mapController.move(
+                                    LatLng(item.location!.latitude!, item.location!.longitude!),
+                                    10);
                           child: TextButton(
                             style: TextButton.styleFrom(
                               shape: const CircleBorder(),
