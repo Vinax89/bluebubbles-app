@@ -170,7 +170,116 @@ class SocketService extends GetxService {
       return;
     }
 
-    final List<Duration> latencies = [];
+    class _RunningStats {
+      int count = 0;
+      double _mean = 0;
+      Duration? min;
+      Duration? max;
+
+      void add(Duration value) {
+        count++;
+        final double micros = value.inMicroseconds.toDouble();
+        _mean += (micros - _mean) / count;
+        if (min == null || value < min!) min = value;
+        if (max == null || value > max!) max = value;
+      }
+
+      Duration get average =>
+          count == 0 ? Duration.zero : Duration(microseconds: _mean.round());
+    }
+
+    class _P2Quantile {
+      _P2Quantile(this.p) : dn = [0, p / 2, p, (1 + p) / 2, 1];
+
+      final double p;
+      final List<double> q = List.filled(5, 0);
+      final List<int> n = List.filled(5, 0);
+      final List<double> np = List.filled(5, 0);
+      final List<double> dn;
+      int count = 0;
+
+      bool get isInitialized => count >= 5;
+
+      void add(Duration value) {
+        _add(value.inMicroseconds.toDouble());
+      }
+
+      void _add(double x) {
+        if (count < 5) {
+          q[count] = x;
+          count++;
+          if (count == 5) {
+            q.sort();
+            for (int i = 0; i < 5; i++) {
+              n[i] = i + 1;
+            }
+            np[0] = 1;
+            np[1] = 1 + 2 * p;
+            np[2] = 1 + 4 * p;
+            np[3] = 3 + 2 * p;
+            np[4] = 5;
+          }
+          return;
+        }
+
+        int k;
+        if (x < q[0]) {
+          q[0] = x;
+          k = 0;
+        } else if (x >= q[4]) {
+          q[4] = x;
+          k = 3;
+        } else {
+          k = 0;
+          while (k < 3 && x >= q[k + 1]) {
+            k++;
+          }
+        }
+
+        for (int i = k + 1; i < 5; i++) {
+          n[i]++;
+        }
+        for (int i = 0; i < 5; i++) {
+          np[i] += dn[i];
+        }
+
+        for (int i = 1; i <= 3; i++) {
+          final double d = np[i] - n[i];
+          if ((d >= 1 && n[i + 1] - n[i] > 1) ||
+              (d <= -1 && n[i - 1] - n[i] > 1)) {
+            final int sign = d >= 0 ? 1 : -1;
+            double qn = _parabolic(i, sign);
+            if (q[i - 1] < qn && qn < q[i + 1]) {
+              q[i] = qn;
+            } else {
+              q[i] = _linear(i, sign);
+            }
+            n[i] += sign;
+          }
+        }
+
+        count++;
+      }
+
+      double _parabolic(int i, int d) {
+        return q[i] +
+            d /
+                (n[i + 1] - n[i - 1]) *
+                ((n[i] - n[i - 1] + d) * (q[i + 1] - q[i]) /
+                    (n[i + 1] - n[i]) +
+                    (n[i + 1] - n[i] - d) * (q[i] - q[i - 1]) /
+                        (n[i] - n[i - 1]));
+      }
+
+      double _linear(int i, int d) {
+        return q[i] + d * (q[i + d] - q[i]) / (n[i + d] - n[i]);
+      }
+
+      Duration get value => Duration(microseconds: q[2].round());
+    }
+
+    final _RunningStats stats = _RunningStats();
+    final _P2Quantile p95 = _P2Quantile(0.95);
     final Stopwatch totalWatch = Stopwatch()..start();
 
     int sent = 0;
@@ -186,7 +295,8 @@ class SocketService extends GetxService {
           final Stopwatch sw = Stopwatch()..start();
           await sendMessage('benchmark', data);
           sw.stop();
-          latencies.add(sw.elapsed);
+          stats.add(sw.elapsed);
+          p95.add(sw.elapsed);
         }());
       }
 
@@ -195,14 +305,17 @@ class SocketService extends GetxService {
 
     totalWatch.stop();
 
-    if (latencies.isEmpty) {
+    if (stats.count == 0) {
       Logger.info('No messages sent during benchmark');
       return;
     }
 
     final Duration totalElapsed = totalWatch.elapsed;
-    final Duration avgLatency =
-        latencies.fold(Duration.zero, (a, b) => a + b) ~/ latencies.length;
+    final Duration avgLatency = stats.average;
+    final Duration minLatency = stats.min ?? Duration.zero;
+    final Duration maxLatency = stats.max ?? Duration.zero;
+    final Duration? p95Latency =
+        p95.isInitialized ? p95.value : null;
     final double throughput =
         messageCount / totalElapsed.inMilliseconds * 1000.0;
 
@@ -210,6 +323,11 @@ class SocketService extends GetxService {
     Logger.info('Total messages: $messageCount');
     Logger.info('Total time: ${totalElapsed.inMilliseconds} ms');
     Logger.info('Average latency: ${avgLatency.inMilliseconds} ms');
+    Logger.info('Min latency: ${minLatency.inMilliseconds} ms');
+    Logger.info('Max latency: ${maxLatency.inMilliseconds} ms');
+    if (p95Latency != null) {
+      Logger.info('95th percentile latency: ${p95Latency.inMilliseconds} ms');
+    }
     Logger.info('Throughput: ${throughput.toStringAsFixed(2)} msg/s');
   }
 
