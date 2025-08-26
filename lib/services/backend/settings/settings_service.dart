@@ -38,6 +38,10 @@ class SettingsService extends GetxService {
   Future<void> init({bool headless = false}) async {
     prefs = await SharedPreferences.getInstance();
     settings = await Settings.getSettings();
+    ls.keepAppAlive = settings.keepAppAlive.value;
+    settings.keepAppAlive.listen((val) {
+      ls.keepAppAlive = val;
+    });
     if (!headless && !kIsWeb && !kIsDesktop) {
       // refresh rate
       try {

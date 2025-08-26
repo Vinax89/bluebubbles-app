@@ -20,6 +20,7 @@ class LifecycleService extends GetxService with WidgetsBindingObserver {
   bool isUiThread = true;
   bool windowFocused = true;
   bool? wasActiveAliveBefore;
+  bool keepAppAlive = false;
   bool get isAlive => kIsWeb ? !(window.document.hidden ?? false)
       : kIsDesktop ? windowFocused : (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed
         || IsolateNameServer.lookupPortByName('bg_isolate') != null);
@@ -43,6 +44,9 @@ class LifecycleService extends GetxService with WidgetsBindingObserver {
 
     isUiThread = !headless;
     this.isBubble = isBubble;
+
+    final prefs = await SharedPreferences.getInstance();
+    keepAppAlive = prefs.getBool("keepAppAlive") ?? false;
 
     handleForegroundService(AppLifecycleState.resumed);
 
@@ -86,19 +90,14 @@ class LifecycleService extends GetxService with WidgetsBindingObserver {
     handleForegroundService(state);
   }
 
-  void handleForegroundService(AppLifecycleState state) async {
+  void handleForegroundService(AppLifecycleState state) {
     // If an isolate is invoking this, we don't want to start/stop the foreground service.
     // It should already be running. We don't need to stop it because the socket service
     // is not started when in headless mode.
     if (!isUiThread) return;
 
     if ([AppLifecycleState.inactive, AppLifecycleState.hidden].contains(state)) return;
-
-    // This may get called before the settings service is initialized
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool keepAlive = prefs.getBool("keepAppAlive") ?? false;
-
-    if (Platform.isAndroid && keepAlive) {
+    if (Platform.isAndroid && keepAppAlive) {
       // We only want the foreground service to run when the app is not active
       if (state == AppLifecycleState.resumed) {
         Logger.info(tag: "LifecycleService", "Stopping foreground service");
