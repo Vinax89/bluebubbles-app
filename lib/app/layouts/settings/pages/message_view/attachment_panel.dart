@@ -50,6 +50,20 @@ class _AttachmentPanelState extends OptimizedState<AttachmentPanel> {
                           title: "Only Auto-download Attachments on WiFi",
                           backgroundColor: tileColor,
                         )),
+                    const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
+                    const SettingsTile(
+                      title: "Concurrent Attachment Downloads",
+                      subtitle: "Adjust how many attachments are downloaded simultaneously",
+                    ),
+                    Obx(() => SettingsSlider(
+                          startingVal: ss.settings.maxAttachmentDownloads.value.toDouble(),
+                          min: 1,
+                          max: 5,
+                          divisions: 4,
+                          formatValue: (val) => val.toInt().toString(),
+                          update: (val) => ss.settings.maxAttachmentDownloads.value = val.toInt(),
+                          onChangeEnd: (val) => saveSettings(),
+                        )),
                     if (!kIsWeb && !kIsDesktop)
                       const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
                     if (!kIsWeb && !kIsDesktop)

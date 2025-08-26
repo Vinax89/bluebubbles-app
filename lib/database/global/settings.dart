@@ -22,6 +22,7 @@ class Settings {
   final RxBool reachedConversationList = false.obs;
   final RxBool autoDownload = true.obs;
   final RxBool onlyWifiDownload = false.obs;
+  final RxInt maxAttachmentDownloads = 2.obs;
   final RxBool autoSave = false.obs;
   final RxString autoSavePicsLocation = "Pictures".obs;
   final RxString autoSaveDocsLocation = "/storage/emulated/0/Download/".obs;
@@ -258,6 +259,7 @@ class Settings {
     Map<String, dynamic> map = {
       'autoDownload': autoDownload.value,
       'onlyWifiDownload': onlyWifiDownload.value,
+      'maxAttachmentDownloads': maxAttachmentDownloads.value,
       'autoSave': autoSave.value,
       'autoSavePicsLocation': autoSavePicsLocation.value,
       'autoSaveDocsLocation': autoSaveDocsLocation.value,
@@ -391,6 +393,7 @@ class Settings {
   static void updateFromMap(Map<String, dynamic> map) {
     ss.settings.autoDownload.value = map['autoDownload'] ?? true;
     ss.settings.onlyWifiDownload.value = map['onlyWifiDownload'] ?? false;
+    ss.settings.maxAttachmentDownloads.value = map['maxAttachmentDownloads'] ?? 2;
     ss.settings.autoSave.value = map['autoSave'] ?? false;
     ss.settings.autoSavePicsLocation.value = map['autoSavePicsLocation'] ?? "Pictures";
     ss.settings.autoSaveDocsLocation.value = map['autoSaveDocsLocation'] ?? "/storage/emulated/0/Download/";
@@ -528,6 +531,7 @@ class Settings {
     s.autoSavePicsLocation.value = map['autoSavePicsLocation'] ?? "Pictures";
     s.autoSaveDocsLocation.value = map['autoSaveDocsLocation'] ?? "/storage/emulated/0/Download/";
     s.onlyWifiDownload.value = map['onlyWifiDownload'] ?? false;
+    s.maxAttachmentDownloads.value = map['maxAttachmentDownloads'] ?? 2;
     s.autoOpenKeyboard.value = map['autoOpenKeyboard'] ?? true;
     s.hideTextPreviews.value = map['hideTextPreviews'] ?? false;
     s.showIncrementalSync.value = map['showIncrementalSync'] ?? false;
