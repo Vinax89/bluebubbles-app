@@ -18,6 +18,7 @@ class AttachmentDownloadService extends GetxService {
   int get maxDownloads => ss.settings.maxAttachmentDownloads.value;
   final RxList<String> downloaders = <String>[].obs;
   final Map<String, List<AttachmentDownloadController>> _downloaders = {};
+  int activeCount = 0;
 
   @override
   void onInit() {
@@ -49,6 +50,9 @@ class AttachmentDownloadService extends GetxService {
   }
 
   void _removeFromQueue(AttachmentDownloadController downloader) {
+    if (downloader.isFetching && activeCount > 0) {
+      activeCount--;
+    }
     downloaders.remove(downloader.attachment.guid!);
     final chatGuid = downloader.attachment.message.target?.chat.target?.guid ?? "unknown";
     _downloaders[chatGuid]!.removeWhere((e) => e.attachment.guid == downloader.attachment.guid);
@@ -58,7 +62,7 @@ class AttachmentDownloadService extends GetxService {
   }
 
   void _fetchNext() {
-    if (_downloaders.values.flattened.where((e) => e.isFetching).length < maxDownloads) {
+    if (activeCount < maxDownloads) {
       AttachmentDownloadController? activeChatDownloader;
       // first check if we have an active chat that needs downloads, if so prioritize that chat
       if (cm.activeChat != null && _downloaders.containsKey(cm.activeChat!.chat.guid)) {
@@ -101,6 +105,7 @@ class AttachmentDownloadController extends GetxController {
   Future<void> fetchAttachment() async {
     if (attachment.guid == null || attachment.guid!.contains("temp")) return;
     isFetching = true;
+    attachmentDownloader.activeCount++;
     stopwatch.start();
     var response = await http.downloadAttachment(attachment.guid!,
         onReceiveProgress: (count, total) => setProgress(kIsWeb ? (count / total) : (count / attachment.totalBytes!))).catchError((err) async {
@@ -115,10 +120,12 @@ class AttachmentDownloadController extends GetxController {
       }
 
       error.value = true;
-      attachmentDownloader._removeFromQueue(this);
-      return Response(requestOptions: RequestOptions(path: ''));
+      return Response(requestOptions: RequestOptions(path: ''), statusCode: 500);
     });
-    if (response.statusCode != 200) return;
+    if (response.statusCode != 200) {
+      attachmentDownloader._removeFromQueue(this);
+      return;
+    }
     Uint8List bytes;
     if (attachment.mimeType == "image/gif") {
       bytes = await fixSpeedyGifs(response.data);
