@@ -15,9 +15,15 @@ AttachmentDownloadService attachmentDownloader = Get.isRegistered<AttachmentDown
     ? Get.find<AttachmentDownloadService>() : Get.put(AttachmentDownloadService());
 
 class AttachmentDownloadService extends GetxService {
-  int maxDownloads = 2;
+  int get maxDownloads => ss.settings.maxAttachmentDownloads.value;
   final RxList<String> downloaders = <String>[].obs;
   final Map<String, List<AttachmentDownloadController>> _downloaders = {};
+
+  @override
+  void onInit() {
+    super.onInit();
+    ever<int>(ss.settings.maxAttachmentDownloads, (_) => _fetchNext());
+  }
 
   AttachmentDownloadController? getController(String? guid) {
     return _downloaders.values.flattened.firstWhereOrNull((element) => element.attachment.guid == guid);
