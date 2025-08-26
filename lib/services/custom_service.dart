@@ -1,3 +1,4 @@
+import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:get/get.dart';
 
 class CustomService extends GetxService {
@@ -8,12 +9,12 @@ class CustomService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('CustomService initialized');
+    Logger.info('CustomService initialized');
   }
 
   @override
   void onClose() {
-    print('CustomService disposed');
+    Logger.info('CustomService disposed');
     super.onClose();
   }
 }
