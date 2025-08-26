@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bluebubbles/helpers/backend/startup_tasks.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +21,8 @@ void main() {
       }
       stopwatch.stop();
       // Output memory usage for manual inspection
-      print('Memory usage (RSS): $memUsage');
-      print('Total elapsed: ${stopwatch.elapsed}');
+      Logger.info('Memory usage (RSS): $memUsage');
+      Logger.info('Total elapsed: ${stopwatch.elapsed}');
     });
 
     test('concurrent initialization', () async {
