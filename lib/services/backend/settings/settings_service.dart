@@ -142,6 +142,18 @@ class SettingsService extends GetxService {
     await fcmData.save(wait: true);
   }
 
+  Future<void> saveThemeToServer({ThemeStruct? light, ThemeStruct? dark}) async {
+    if (!settings.finishedSetup.value) return;
+    try {
+      if (light != null) {
+        await http.setTheme('selected-light', light.toMap());
+      }
+      if (dark != null) {
+        await http.setTheme('selected-dark', dark.toMap());
+      }
+    } catch (_) {}
+  }
+
   Future<Tuple4<int, int, String, int>> getServerDetails({bool refresh = false}) async {
     if (refresh) {
       final response = await http.serverInfo();
