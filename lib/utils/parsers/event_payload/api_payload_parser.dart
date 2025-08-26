@@ -1,4 +1,3 @@
-/*
 import 'package:bluebubbles/utils/parsers/event_payload/api_payload.dart';
 import 'package:bluebubbles/services/services.dart';
 
@@ -62,7 +61,7 @@ class ApiPayloadParser {
   Future<List<dynamic>> enrichEntity(String entity, ApiPayload payload) async {
     List<dynamic> output = payload.dataIsList ? payload.data : [payload.data];
     bool needsEnrichment = output.isNotEmpty && output.every((i) => i is String);
-    
+
     if (!enrichmentRefs.containsKey(entity)) {
       throw Exception('Invalid entity type: $entity');
     }
@@ -102,33 +101,90 @@ class ApiPayloadParser {
       (guid) => messagesMap.containsKey(guid)).map((guid) => messagesMap[guid]).toList();
   }
 
-  dynamic parseAttachment(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
+  Future<dynamic> parseAttachment(ApiPayload payload) async {
+    List<dynamic> data = payload.dataIsList ? payload.data : [payload.data];
+    bool needsEnrichment = data.isNotEmpty && data.every((i) => i is String);
 
+    if (needsEnrichment) {
+      payload.data = await enrichEntity('attachments', payload);
+    }
+
+    return payload;
   }
 
   Future<List<dynamic>> enrichAttachments(List<String> guids) async {
-    // TODO: Implement attachment query endpoint
-    return [];
+    final futures = guids.map((guid) => http.attachment(guid));
+    final responses = await Future.wait(futures);
+
+    Map<String, dynamic> attachmentsMap = {};
+    for (var res in responses) {
+      final data = res.data['data'];
+      if (data != null && data['guid'] != null) {
+        attachmentsMap[data['guid']] = data;
+      }
+    }
+
+    return guids
+        .where((guid) => attachmentsMap.containsKey(guid))
+        .map((guid) => attachmentsMap[guid])
+        .toList();
   }
 
-  dynamic parseChat(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
+  Future<dynamic> parseChat(ApiPayload payload) async {
+    List<dynamic> data = payload.dataIsList ? payload.data : [payload.data];
+    bool needsEnrichment = data.isNotEmpty && data.every((i) => i is String);
 
+    if (needsEnrichment) {
+      payload.data = await enrichEntity('chats', payload);
+    }
+
+    return payload;
   }
 
   Future<List<dynamic>> enrichChats(List<String> guids) async {
-    // TODO: Implement chat query endpoint
-    return [];
+    final futures = guids.map((guid) => http.singleChat(guid));
+    final responses = await Future.wait(futures);
+
+    Map<String, dynamic> chatsMap = {};
+    for (var res in responses) {
+      final data = res.data['data'];
+      if (data != null && data['guid'] != null) {
+        chatsMap[data['guid']] = data;
+      }
+    }
+
+    return guids
+        .where((guid) => chatsMap.containsKey(guid))
+        .map((guid) => chatsMap[guid])
+        .toList();
   }
 
-  dynamic parseHandle(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
+  Future<dynamic> parseHandle(ApiPayload payload) async {
+    List<dynamic> data = payload.dataIsList ? payload.data : [payload.data];
+    bool needsEnrichment = data.isNotEmpty && data.every((i) => i is String);
 
+    if (needsEnrichment) {
+      payload.data = await enrichEntity('participants', payload);
+    }
+
+    return payload;
   }
 
   Future<List<dynamic>> enrichHandles(List<String> addresses) async {
-    // TODO: Implement handle query endpoint
-    return [];
+    final futures = addresses.map((addr) => http.handle(addr));
+    final responses = await Future.wait(futures);
+
+    Map<String, dynamic> handlesMap = {};
+    for (var res in responses) {
+      final data = res.data['data'];
+      if (data == null) continue;
+      if (data['address'] != null) handlesMap[data['address']] = data;
+      if (data['guid'] != null) handlesMap[data['guid']] = data;
+    }
+
+    return addresses
+        .where((addr) => handlesMap.containsKey(addr))
+        .map((addr) => handlesMap[addr])
+        .toList();
   }
-}*/
+}
