@@ -10,7 +10,7 @@ import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/app/wrappers/scrollbar_wrapper.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:get/get.dart';
@@ -55,7 +55,7 @@ class CupertinoConversationListState extends OptimizedState<CupertinoConversatio
           : const SizedBox.shrink()),
       appBar: showArchived || showUnknown
           ? AppBar(
-              leading: buildBackButton(context),
+              leading: const BackButton(),
               elevation: 0,
               systemOverlayStyle: brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
               centerTitle: true,

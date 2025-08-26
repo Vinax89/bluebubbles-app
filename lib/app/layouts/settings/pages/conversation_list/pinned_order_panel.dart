@@ -6,7 +6,7 @@ import 'package:bluebubbles/app/wrappers/scrollbar_wrapper.dart';
 import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:get/get.dart';
@@ -49,7 +49,7 @@ class PinnedOrderPanel extends StatelessWidget {
                   elevation: 0,
                   scrolledUnderElevation: 3,
                   surfaceTintColor: context.theme.colorScheme.primary,
-                  leading: buildBackButton(context),
+                  leading: const BackButton(),
                   backgroundColor: _backgroundColor.value,
                   centerTitle: ss.settings.skin.value == Skins.iOS,
                   title: Text(

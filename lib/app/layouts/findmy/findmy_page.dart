@@ -16,10 +16,10 @@ import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
@@ -930,7 +930,7 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                             width: 48,
                             height: 48,
                             margin: const EdgeInsets.symmetric(horizontal: 8),
-                            child: buildBackButton(context),
+                            child: const BackButton(),
                           ),
                           Expanded(child: Text("Find My", style: context.theme.textTheme.titleLarge)),
                         ],
@@ -1176,7 +1176,10 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                   child: Container(
                     width: 48,
                     height: 48,
-                    child: buildBackButton(context, padding: const EdgeInsets.only(right: 2)),
+                    child: const Padding(
+                      padding: EdgeInsets.only(right: 2),
+                      child: const BackButton(),
+                    ),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Theme.of(context).colorScheme.properSurface.withOpacity(0.9),
@@ -1343,7 +1346,7 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
                     height: 50,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: buildBackButton(context),
+                      child: const BackButton(),
                     ),
                   ),
                 ),

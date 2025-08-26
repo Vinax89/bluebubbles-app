@@ -8,9 +8,9 @@ import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:universal_html/html.dart' as uh;
@@ -198,7 +198,7 @@ class _NotificationPanelState extends OptimizedState<NotificationPanel> with Sin
             elevation: 0,
             scrolledUnderElevation: 3,
             surfaceTintColor: context.theme.colorScheme.primary,
-            leading: buildBackButton(context),
+            leading: const BackButton(),
             backgroundColor: headerColor,
             centerTitle: iOS,
             title: Text(
@@ -285,7 +285,7 @@ class _NotificationPanelState extends OptimizedState<NotificationPanel> with Sin
                                         height: 50,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
-                                          child: buildBackButton(context),
+                                          child: const BackButton(),
                                         ),
                                       ),
                                     ),
