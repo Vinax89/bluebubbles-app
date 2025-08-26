@@ -51,64 +51,80 @@ class IntentsService extends GetxService {
     switch (intent.action) {
       case "android.intent.action.SEND":
       case "android.intent.action.SEND_MULTIPLE":
-        final id = intent.extra?["android.intent.extra.shortcut.ID"];
-        final text = intent.extra?["android.intent.extra.TEXT"];
-        final files = <PlatformFile>[];
-        if (intent.extra?["android.intent.extra.STREAM"] != null) {
-          final data = intent.extra!["android.intent.extra.STREAM"];
-          if (data is List) {
-            for (String? s in data) {
-              if (s == null) continue;
-              final path = await mcs.invokeMethod("get-content-uri-path", {"uri": s});
-              final bytes = await File(path).readAsBytes();
-              files.add(PlatformFile(
-                path: path,
-                name: basename(path),
-                bytes: bytes,
-                size: bytes.length,
-              ));
-            }
-          } else if (data != null) {
-            final path = await mcs.invokeMethod("get-content-uri-path", {"uri": data});
-            final bytes = await File(path).readAsBytes();
-            files.add(PlatformFile(
-              path: path,
-              name: basename(path),
-              bytes: bytes,
-              size: bytes.length,
-            ));
-          }
-        }
-        await openChat(id, text: text, attachments: files);
+        await _handleSend(intent);
         return;
       default:
         if (intent.data?.startsWith("imessage://") ?? false) {
-          final uri = Uri.tryParse(intent.data!.replaceFirst("imessage://", "imessage:").replaceFirst("&body=", "?body="));
-          if (uri != null) {
-            final address = uri.path;
-            final handle = Handle.findOne(addressAndService: Tuple2(address, "iMessage"));
-            ns.pushAndRemoveUntil(
-              Get.context!,
-              ChatCreator(
-                initialSelected: [SelectedContact(displayName: handle?.displayName ?? address, address: address)],
-                initialText: uri.queryParameters['body'],
-              ),
-              (route) => route.isFirst,
-            );
-          }
+          await _handleImessageUrl(intent);
         } else if (intent.extra?["chatGuid"] != null) {
-          final guid = intent.extra!["chatGuid"]!;
-          final bubble = intent.extra!["bubble"] == true;
-          ls.isBubble = bubble;
-          await openChat(guid);
+          await _handleOpenChat(intent);
         } else if (intent.extra?["callUuid"] != null) {
-          await StartupTasks.waitForUI();
-          if (intent.extra?["answer"] == true) {
-            await answerFaceTime(intent.extra?["callUuid"]!);
-          } else {
-            await showFaceTimeOverlay(intent.extra?["callUuid"], intent.extra?["caller"], null, false);
-          }
+          await _handleFaceTime(intent);
         }
+    }
+  }
+
+  Future<void> _handleSend(Intent intent) async {
+    final id = intent.extra?["android.intent.extra.shortcut.ID"];
+    final text = intent.extra?["android.intent.extra.TEXT"];
+    final files = <PlatformFile>[];
+    if (intent.extra?["android.intent.extra.STREAM"] != null) {
+      final data = intent.extra!["android.intent.extra.STREAM"];
+      if (data is List) {
+        for (String? s in data) {
+          if (s == null) continue;
+          final path = await mcs.invokeMethod("get-content-uri-path", {"uri": s});
+          final bytes = await File(path).readAsBytes();
+          files.add(PlatformFile(
+            path: path,
+            name: basename(path),
+            bytes: bytes,
+            size: bytes.length,
+          ));
+        }
+      } else if (data != null) {
+        final path = await mcs.invokeMethod("get-content-uri-path", {"uri": data});
+        final bytes = await File(path).readAsBytes();
+        files.add(PlatformFile(
+          path: path,
+          name: basename(path),
+          bytes: bytes,
+          size: bytes.length,
+        ));
+      }
+    }
+    await openChat(id, text: text, attachments: files);
+  }
+
+  Future<void> _handleImessageUrl(Intent intent) async {
+    final uri = Uri.tryParse(intent.data!.replaceFirst("imessage://", "imessage:").replaceFirst("&body=", "?body="));
+    if (uri != null) {
+      final address = uri.path;
+      final handle = Handle.findOne(addressAndService: Tuple2(address, "iMessage"));
+      ns.pushAndRemoveUntil(
+        Get.context!,
+        ChatCreator(
+          initialSelected: [SelectedContact(displayName: handle?.displayName ?? address, address: address)],
+          initialText: uri.queryParameters['body'],
+        ),
+        (route) => route.isFirst,
+      );
+    }
+  }
+
+  Future<void> _handleOpenChat(Intent intent) async {
+    final guid = intent.extra!["chatGuid"]!;
+    final bubble = intent.extra!["bubble"] == true;
+    ls.isBubble = bubble;
+    await openChat(guid);
+  }
+
+  Future<void> _handleFaceTime(Intent intent) async {
+    await StartupTasks.waitForUI();
+    if (intent.extra?["answer"] == true) {
+      await answerFaceTime(intent.extra?["callUuid"]!);
+    } else {
+      await showFaceTimeOverlay(intent.extra?["callUuid"], intent.extra?["caller"], null, false);
     }
   }
 
