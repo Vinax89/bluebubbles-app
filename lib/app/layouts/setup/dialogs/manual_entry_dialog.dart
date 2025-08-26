@@ -201,7 +201,7 @@ class _ManualEntryDialogState extends OptimizedState<ManualEntryDialog> {
       );
     } else if (error != null) {
       return FailedToScanDialog(
-        title: "An error occured while trying to retreive data!",
+        title: "An error occurred while trying to retrieve data!",
         exception: error,
       );
     } else {

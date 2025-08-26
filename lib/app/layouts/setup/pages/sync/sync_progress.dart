@@ -41,7 +41,7 @@ class _SyncProgressState extends OptimizedState<SyncProgress> {
       if (event == SyncStatus.COMPLETED_ERROR) {
         await showDialog(
           context: context,
-          builder: (context) => FailedToScanDialog(exception: err, title: "An error occured during setup!"),
+          builder: (context) => FailedToScanDialog(exception: err, title: "An error occurred during setup!"),
         );
 
         controller.pageController.animateToPage(
