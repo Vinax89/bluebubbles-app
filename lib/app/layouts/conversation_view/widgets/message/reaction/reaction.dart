@@ -39,7 +39,8 @@ class ReactionWidgetState extends OptimizedState<ReactionWidget> {
   List<Message>? get reactions => widget.reactions;
   bool get reactionIsFromMe => reaction.isFromMe!;
   bool get messageIsFromMe => widget.message?.isFromMe ?? true;
-  String get reactionType => reaction.associatedMessageType!;
+  ReactionType get reactionType =>
+      ReactionTypes.fromString(reaction.associatedMessageType!.replaceAll('-', ''))!;
 
   static const double iosSize = 35;
 
@@ -161,7 +162,7 @@ class ReactionWidgetState extends OptimizedState<ReactionWidget> {
                     textAlign: TextAlign.center,
                   );
                   // rotate thumbs down to match iOS
-                  if (reactionType == "dislike") {
+                    if (reactionType == ReactionType.dislike) {
                     return Transform(
                       transform: Matrix4.identity()..rotateY(pi),
                       alignment: FractionalOffset.center,
@@ -207,10 +208,11 @@ class ReactionWidgetState extends OptimizedState<ReactionWidget> {
               height: iosSize*0.8,
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(6.5).add(EdgeInsets.only(right: reactionType == "emphasize" ? 1 : 0)),
+                  padding: const EdgeInsets.all(6.5)
+                      .add(EdgeInsets.only(right: reactionType == ReactionType.emphasize ? 1 : 0)),
                   child: SvgPicture.asset(
-                    'assets/reactions/$reactionType-black.svg',
-                    colorFilter: ColorFilter.mode(reactionType == "love"
+                    'assets/reactions/${reactionType.name}-black.svg',
+                    colorFilter: ColorFilter.mode(reactionType == ReactionType.love
                         ? Colors.pink
                         : (reactionIsFromMe ? context.theme.colorScheme.onPrimary : context.theme.colorScheme.properOnSurface), BlendMode.srcIn),
                   ),

@@ -264,7 +264,7 @@ class Chat {
       return true;
     }
     return !ss.settings.notifyReactions.value &&
-        ReactionTypes.toList().contains(message?.associatedMessageType ?? "");
+        ReactionTypes.fromString(message?.associatedMessageType) != null;
   }
 
   static void unDelete(Chat chat) {

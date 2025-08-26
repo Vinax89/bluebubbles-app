@@ -128,7 +128,7 @@ class HeartRecentAction extends Action<HeartRecentIntent> {
   Object? invoke(covariant HeartRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.LOVE);
+      _sendReactionHelper(chat, message, ReactionType.love);
     }
     return null;
   }
@@ -147,7 +147,7 @@ class LikeRecentAction extends Action<LikeRecentIntent> {
   Object? invoke(covariant LikeRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.LIKE);
+      _sendReactionHelper(chat, message, ReactionType.like);
     }
     return null;
   }
@@ -166,7 +166,7 @@ class DislikeRecentAction extends Action<DislikeRecentIntent> {
   Object? invoke(covariant DislikeRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.DISLIKE);
+      _sendReactionHelper(chat, message, ReactionType.dislike);
     }
     return null;
   }
@@ -185,7 +185,7 @@ class LaughRecentAction extends Action<LaughRecentIntent> {
   Object? invoke(covariant LaughRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.LAUGH);
+      _sendReactionHelper(chat, message, ReactionType.laugh);
     }
     return null;
   }
@@ -204,7 +204,7 @@ class EmphasizeRecentAction extends Action<EmphasizeRecentIntent> {
   Object? invoke(covariant EmphasizeRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.EMPHASIZE);
+      _sendReactionHelper(chat, message, ReactionType.emphasize);
     }
     return null;
   }
@@ -223,7 +223,7 @@ class QuestionRecentAction extends Action<QuestionRecentIntent> {
   Object? invoke(covariant QuestionRecentIntent intent) async {
     final message = ms(chat.guid).mostRecent;
     if (message != null && ss.settings.enablePrivateAPI.value) {
-      _sendReactionHelper(chat, message, ReactionTypes.QUESTION);
+      _sendReactionHelper(chat, message, ReactionType.question);
     }
     return null;
   }
@@ -339,19 +339,19 @@ class GoBackAction extends Action<GoBackIntent> {
   }
 }
 
-void _sendReactionHelper(Chat c, Message selected, String t) {
+void _sendReactionHelper(Chat c, Message selected, ReactionType t) {
   outq.queue(OutgoingItem(
     type: QueueType.sendMessage,
     chat: c,
     message: Message(
       associatedMessageGuid: selected.guid,
-      associatedMessageType: t,
+      associatedMessageType: t.name,
       dateCreated: DateTime.now(),
       hasAttachments: false,
       isFromMe: true,
       handleId: 0,
     ),
     selected: selected,
-    reaction: t,
+    reaction: t.name,
   ));
 }

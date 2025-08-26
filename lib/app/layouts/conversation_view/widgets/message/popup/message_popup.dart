@@ -85,8 +85,9 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
   late int numberToShow = 5;
   late Chat? dmChat = chats.chats
       .firstWhereOrNull((chat) => !chat.isGroup && chat.participants.firstWhereOrNull((handle) => handle.address == message.handle?.address) != null);
-  String? selfReaction;
-  String? currentlySelectedReaction = "init";
+  ReactionType? selfReaction;
+  ReactionType? currentlySelectedReaction;
+  bool isInitializing = true;
 
   ConversationViewController get cvController => widget.cvController;
 
@@ -131,11 +132,16 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
     updateObx(() {
       currentlySelectedReaction = null;
       reactions = getUniqueReactionMessages(message.associatedMessages
-          .where((e) => ReactionTypes.toList().contains(e.associatedMessageType?.replaceAll("-", "")) && (e.associatedMessagePart ?? 0) == part.part)
+          .where((e) =>
+              ReactionTypes.fromString(
+                  e.associatedMessageType?.replaceAll("-", "")) !=
+              null &&
+              (e.associatedMessagePart ?? 0) == part.part)
           .toList());
-      final self = reactions.firstWhereOrNull((e) => e.isFromMe!)?.associatedMessageType;
+      final self =
+          reactions.firstWhereOrNull((e) => e.isFromMe!)?.associatedMessageType;
       if (!(self?.contains("-") ?? true)) {
-        selfReaction = self;
+        selfReaction = ReactionTypes.fromString(self!);
         currentlySelectedReaction = selfReaction;
       }
       for (Message m in reactions) {
@@ -147,6 +153,7 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
       }
       setState(() {
         if (iOS) messageOffset = itemHeight * numberToShow + 40;
+        isInitializing = false;
       });
     });
   }
@@ -276,7 +283,7 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
                           curve: Curves.easeInOut,
                           alignment: message.isFromMe! ? Alignment.centerRight : Alignment.centerLeft,
                           duration: const Duration(milliseconds: 250),
-                          child: currentlySelectedReaction == "init"
+                          child: isInitializing
                               ? const SizedBox(height: 80)
                               : ClipShadowPath(
                                   shadow: iOS
@@ -302,7 +309,8 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
                                               mainAxisSize: MainAxisSize.min,
                                               mainAxisAlignment: MainAxisAlignment.start,
                                               children: ReactionTypes.toList()
-                                                  .slice(narrowScreen && index == 1 ? 3 : 0, narrowScreen && index == 0 ? 3 : null)
+                                                  .slice(narrowScreen && index == 1 ? 3 : 0,
+                                                      narrowScreen && index == 0 ? 3 : null)
                                                   .map((e) {
                                                 return Padding(
                                                   padding: iOS ? const EdgeInsets.all(5.0) : const EdgeInsets.symmetric(horizontal: 5),
@@ -322,16 +330,21 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
                                                           }
                                                           setState(() {});
                                                           HapticFeedback.lightImpact();
-                                                          widget.sendTapback(selfReaction == e ? "-$e" : e, part.part);
+                                                          widget.sendTapback(
+                                                              selfReaction == e
+                                                                  ? "-${e.name}"
+                                                                  : e.name,
+                                                              part.part);
                                                           popDetails();
                                                         },
                                                         child: Padding(
-                                                          padding: const EdgeInsets.all(6.5).add(EdgeInsets.only(right: e == "emphasize" ? 2.5 : 0)),
+                                                          padding: const EdgeInsets.all(6.5).add(
+                                                              EdgeInsets.only(right: e == ReactionType.emphasize ? 2.5 : 0)),
                                                           child: iOS
                                                               ? SvgPicture.asset(
-                                                                  'assets/reactions/$e-black.svg',
+                                                                  'assets/reactions/${e.name}-black.svg',
                                                                   colorFilter: ColorFilter.mode(
-                                                                      e == "love" && currentlySelectedReaction == e
+                                                                      e == ReactionType.love && currentlySelectedReaction == e
                                                                           ? Colors.pink
                                                                           : (currentlySelectedReaction == e
                                                                               ? context.theme.colorScheme.onPrimary
@@ -346,7 +359,7 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
                                                                       textAlign: TextAlign.center,
                                                                     );
                                                                     // rotate thumbs down to match iOS
-                                                                    if (e == "dislike") {
+                                                                    if (e == ReactionType.dislike) {
                                                                       return Transform(
                                                                         transform: Matrix4.identity()..rotateY(pi),
                                                                         alignment: FractionalOffset.center,
@@ -1219,7 +1232,11 @@ class ReactionDetails extends StatelessWidget {
                             : Center(
                                 child: Builder(builder: (context) {
                                   final text = Text(
-                                    ReactionTypes.reactionToEmoji[message.associatedMessageType] ?? "X",
+                                    ReactionTypes.reactionToEmoji[
+                                            ReactionTypes.fromString(
+                                                message.associatedMessageType ?? "") ??
+                                                ReactionType.love] ??
+                                        "X",
                                     style: const TextStyle(fontSize: 18, fontFamily: 'Apple Color Emoji'),
                                     textAlign: TextAlign.center,
                                   );

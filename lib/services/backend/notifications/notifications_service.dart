@@ -375,7 +375,8 @@ class NotificationsService extends GetxService {
         .map((action) => action == "Mark Read"
             ? action
             : !isReaction && !message.isGroupEvent && papi
-                ? ReactionTypes.reactionToEmoji[action]!
+                ? ReactionTypes
+                    .reactionToEmoji[ReactionTypes.fromString(action)!]!
                 : null)
         .whereNotNull()
         .toList();
@@ -490,14 +491,15 @@ class NotificationsService extends GetxService {
           chat.toggleHasUnread(false);
           EventDispatcher().emit('refresh', null);
         } else if (ss.settings.enablePrivateAPI.value) {
-          String reaction = ReactionTypes.emojiToReaction[actions[index]]!;
+          ReactionType reaction =
+              ReactionTypes.emojiToReaction[actions[index]]!;
           outq.queue(
             OutgoingItem(
               type: QueueType.sendMessage,
               chat: chat,
               message: Message(
                 associatedMessageGuid: message.guid,
-                associatedMessageType: reaction,
+                associatedMessageType: reaction.name,
                 associatedMessagePart: 0,
                 dateCreated: DateTime.now(),
                 hasAttachments: false,
@@ -505,7 +507,7 @@ class NotificationsService extends GetxService {
                 handleId: 0,
               ),
               selected: message,
-              reaction: reaction,
+              reaction: reaction.name,
             ),
           );
         }
