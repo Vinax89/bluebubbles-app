@@ -714,6 +714,34 @@ class HttpService extends GetxService {
     });
   }
 
+  /// Send a sticker. [chatGuid] specifies the chat, [tempGuid] specifies a
+  /// temporary guid to avoid duplicate messages being sent, [file] is the
+  /// sticker image, and [selectedMessageGuid] is the guid of the message being
+  /// stickered.
+  Future<Response> sendSticker(String chatGuid, String tempGuid, PlatformFile file, String selectedMessageGuid, {int? partIndex, void Function(int, int)? onSendProgress, CancelToken? cancelToken}) async {
+    return runApiGuarded(() async {
+      final fileName = file.name;
+      final formData = FormData.fromMap({
+        "sticker": kIsWeb ? MultipartFile.fromBytes(file.bytes!, filename: fileName) : await MultipartFile.fromFile(file.path!, filename: fileName),
+        "chatGuid": chatGuid,
+        "tempGuid": tempGuid,
+        "name": fileName,
+        "selectedMessageGuid": selectedMessageGuid,
+        "partIndex": partIndex,
+      });
+
+      final response = await dio.post(
+          "$apiRoot/message/sticker",
+          queryParameters: buildQueryParams(),
+          cancelToken: cancelToken,
+          data: formData,
+          onSendProgress: onSendProgress,
+          options: Options(sendTimeout: dio.options.sendTimeout! * 12, receiveTimeout: dio.options.receiveTimeout! * 12, headers: headers),
+      );
+      return returnSuccessOrError(response);
+    });
+  }
+
   /// Send a message. [chatGuid] specifies the chat, [tempGuid] specifies a
   /// temporary guid to avoid duplicate messages being sent, [message] is the
   /// body of the message. Optionally provide [method] to send via private API,

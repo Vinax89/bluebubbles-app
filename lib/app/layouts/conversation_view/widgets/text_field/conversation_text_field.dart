@@ -34,6 +34,7 @@ import 'package:giphy_get/giphy_get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path/path.dart' hide context;
+import 'package:mime_type/mime_type.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supercharged/supercharged.dart';
 import 'package:tuple/tuple.dart';
@@ -441,8 +442,9 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
             break;
         }
       }
+      final regularAttachments = controller.pickedAttachments.where((e) => !controller.pickedStickers.contains(e)).toList();
       await controller.send(
-        controller.pickedAttachments,
+        regularAttachments,
         text,
         controller.subjectTextController.text,
         controller.replyToMessage?.item1.threadOriginatorGuid ?? controller.replyToMessage?.item1.guid,
@@ -450,8 +452,40 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
         effect,
         false,
       );
+      if (controller.pickedStickers.isNotEmpty) {
+        if (controller.replyToMessage == null) {
+          showSnackbar("Error", "Select a message to sticker!");
+        } else {
+          for (PlatformFile file in controller.pickedStickers) {
+            final message = Message(
+              text: "",
+              dateCreated: DateTime.now(),
+              hasAttachments: true,
+              attachments: [
+                Attachment(
+                  isOutgoing: true,
+                  mimeType: mime(file.name) ?? 'image/png',
+                  uti: 'public.png',
+                  bytes: file.bytes,
+                  transferName: file.name,
+                  totalBytes: file.size,
+                ),
+              ],
+              isFromMe: true,
+              handleId: 0,
+              associatedMessageGuid: controller.replyToMessage!.item1.guid,
+              associatedMessageType: 'sticker',
+              associatedMessagePart: controller.replyToMessage!.item2,
+            );
+            message.generateTempGuid();
+            message.attachments.first!.guid = message.guid;
+            await outq.queue(OutgoingItem(type: QueueType.sendSticker, chat: controller.chat, message: message));
+          }
+        }
+      }
     }
     controller.pickedAttachments.clear();
+    controller.pickedStickers.clear();
     controller.textController.clear();
     controller.subjectTextController.clear();
     controller.replyToMessage = null;
@@ -624,6 +658,25 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
                         }
                       }
                     }),
+              IconButton(
+                  icon: Icon(iOS ? CupertinoIcons.square_on_square : Icons.sticky_note_2_outlined, color: context.theme.colorScheme.outline, size: 28),
+                  onPressed: () async {
+                    if (controller.replyToMessage == null) {
+                      showSnackbar("Error", "Select a message to sticker!");
+                      return;
+                    }
+                    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+                    if (res == null || res.files.isEmpty || res.files.first.bytes == null) return;
+                    final pf.PlatformFile e = res.files.first;
+                    final sticker = PlatformFile(
+                      path: e.path,
+                      name: e.name,
+                      size: e.size,
+                      bytes: e.bytes!,
+                    );
+                    controller.pickedAttachments.add(sticker);
+                    controller.pickedStickers.add(sticker);
+                  }),
               if (kIsDesktop || kIsWeb)
                 IconButton(
                   icon: Icon(iOS ? CupertinoIcons.smiley_fill : Icons.emoji_emotions, color: context.theme.colorScheme.outline, size: 28),
