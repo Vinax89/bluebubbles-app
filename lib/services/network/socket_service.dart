@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:bluebubbles/helpers/backend/settings_helpers.dart';
 import 'package:bluebubbles/utils/crypto_utils.dart';
@@ -39,6 +40,8 @@ class SocketService extends GetxService {
   DateTime? _lastDisconnect;
   DateTime? _lastConnect;
   int _retryCount = 0;
+  static const Duration _baseReconnectDelay = Duration(seconds: 5);
+  static const Duration _maxReconnectDelay = Duration(minutes: 1);
   final StreamController<ReconnectMetric> _metricsController = StreamController.broadcast();
   Stream<ReconnectMetric> get metricsStream => _metricsController.stream;
 
@@ -243,9 +246,6 @@ class SocketService extends GetxService {
       case SocketState.connecting:
         Logger.info("Connecting to socket...");
         state.value = SocketState.connecting;
-        if (_lastDisconnect != null) {
-          _retryCount++;
-        }
         return;
       case SocketState.error:
         Logger.info("Socket connect error, fetching new URL...");
@@ -259,8 +259,11 @@ class SocketService extends GetxService {
         }
 
         state.value = SocketState.error;
-        // After 5 seconds of an error, we should retry the connection
-        _reconnectTimer = Timer(const Duration(seconds: 5), () async {
+        final int exponent = _retryCount > 0 ? _retryCount - 1 : 0;
+        final int delaySeconds = math.min(
+            _baseReconnectDelay.inSeconds * (1 << exponent),
+            _maxReconnectDelay.inSeconds);
+        _reconnectTimer = Timer(Duration(seconds: delaySeconds), () async {
           if (state.value == SocketState.connected) return;
 
           await fdb.fetchNewUrl();
