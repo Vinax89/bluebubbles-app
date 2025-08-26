@@ -9,11 +9,11 @@ Message handleSendError(dynamic error, Message m) {
   } else if (error is DioException) {
     String _error;
     if (error.type == DioExceptionType.connectionTimeout) {
-      _error = "Connect timeout occured! Check your connection.";
+      _error = "Connect timeout occurred! Check your connection.";
     } else if (error.type == DioExceptionType.sendTimeout) {
-      _error = "Send timeout occured!";
+      _error = "Send timeout occurred!";
     } else if (error.type == DioExceptionType.receiveTimeout) {
-      _error = "Receive data timeout occured! Check server logs for more info.";
+      _error = "Receive data timeout occurred! Check server logs for more info.";
     } else {
       _error = error.error.toString();
     }
