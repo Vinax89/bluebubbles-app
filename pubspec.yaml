@@ -124,6 +124,7 @@ dependencies:
   media_kit_libs_linux: ^1.1.3                   # GNU/Linux dependency package.
   metadata_fetch: ^0.4.1
   mime_type: ^1.0.0
+  mobile_networks: ^1.0.0
   mobile_scanner: ^5.1.1 # no desktop support
   msix: ^3.16.8
   multi_value_listenable_builder: ^0.0.2

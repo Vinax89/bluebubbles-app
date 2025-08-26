@@ -102,8 +102,16 @@ class AttachmentDownloadController extends GetxController {
     if (attachment.guid == null || attachment.guid!.contains("temp")) return;
     isFetching = true;
     stopwatch.start();
-    var response = await http.downloadAttachment(attachment.guid!,
-        onReceiveProgress: (count, total) => setProgress(kIsWeb ? (count / total) : (count / attachment.totalBytes!))).catchError((err) async {
+    bool highSpeed = false;
+    try {
+      highSpeed = await isHighSpeedConnection();
+    } catch (_) {}
+    var response = await http
+        .downloadAttachment(attachment.guid!,
+            onReceiveProgress: (count, total) =>
+                setProgress(kIsWeb ? (count / total) : (count / attachment.totalBytes!)),
+            original: highSpeed)
+        .catchError((err) async {
       if (!kIsWeb) {
         File file = File(attachment.path);
         if (await file.exists()) {
