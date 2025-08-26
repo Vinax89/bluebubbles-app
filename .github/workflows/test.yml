@@ -27,7 +27,6 @@ jobs:
 
       - name: Resolve dependencies (respect dependency_overrides)
         run: |
-          flutter pub upgrade --major-versions
           flutter pub get
           flutter pub deps --style=compact | sed -n '1,120p'
 
