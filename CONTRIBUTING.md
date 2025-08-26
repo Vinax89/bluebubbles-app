@@ -42,7 +42,7 @@ In order to start contributing, follow these steps:
     * `git fetch`
     * `git fetch upstream`
 6. Pull the latest changes, or a specific branch you want to start from
-    * Pull code from the main repository's development branch: `git pull upstream development`
+    * Pull code from the main repository's master branch: `git pull upstream master`
     * Checkout a specific branch: `git checkout upstream <name of branch>`
 
 ## Picking an Issue
@@ -78,12 +78,12 @@ Once you have made all your changes, follow these instructions:
 1. Login to GitHub's website
 2. Go to your forked `bluebubbles-app` repository
 3. Go to the `Pull requests` tab
-4. Create a new Pull request, merging your changes into the main `development` branch
+4. Create a new Pull request, merging your changes into the main `master` branch
 5. Please include the following information with your pull request:
     * The problem
     * What your code solves
     * How you fixed it
-6. Once submitted, your changes will be reviewed, and hopefully committed into the development branch!
+6. Once submitted, your changes will be reviewed, and hopefully committed into the master branch!
 
 ## Getting GIF Keyboard Support
 
