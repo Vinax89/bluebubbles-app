@@ -31,6 +31,7 @@ enum DetailsMenuAction {
   CopySelection,
   Delete,
   Bookmark,
+  Pin,
   SelectMultiple,
   MessageInfo,
 }
@@ -66,6 +67,7 @@ const Map<DetailsMenuAction, PlatformSupport> _actionPlatformSupport = {
   DetailsMenuAction.CopySelection: PlatformSupport(false, true, true, true),
   DetailsMenuAction.Delete: PlatformSupport(true, true, true, true),
   DetailsMenuAction.Bookmark: PlatformSupport(true, true, true, true),
+  DetailsMenuAction.Pin: PlatformSupport(true, true, true, true),
   DetailsMenuAction.SelectMultiple: PlatformSupport(true, true, true, true),
   DetailsMenuAction.MessageInfo: PlatformSupport(true, true, true, true),
 };
@@ -92,6 +94,7 @@ const Map<DetailsMenuAction, (IconData, IconData)> _actionToIcon = {
   DetailsMenuAction.CopySelection: (CupertinoIcons.text_cursor, Icons.content_copy),
   DetailsMenuAction.Delete: (CupertinoIcons.trash, Icons.delete_outlined),
   DetailsMenuAction.Bookmark: (CupertinoIcons.bookmark, Icons.bookmark_outlined),
+  DetailsMenuAction.Pin: (CupertinoIcons.pin, Icons.push_pin_outlined),
   DetailsMenuAction.SelectMultiple: (CupertinoIcons.checkmark_square, Icons.check_box_outlined),
   DetailsMenuAction.MessageInfo: (CupertinoIcons.info, Icons.info),
 };
@@ -118,6 +121,7 @@ const Map<DetailsMenuAction, String> _actionToText = {
   DetailsMenuAction.CopySelection: "Copy Selection",
   DetailsMenuAction.Delete: "Delete",
   DetailsMenuAction.Bookmark: "Add/Remove Bookmark",
+  DetailsMenuAction.Pin: "Pin/Unpin",
   DetailsMenuAction.SelectMultiple: "Select Multiple",
   DetailsMenuAction.MessageInfo: "Message Info",
 };

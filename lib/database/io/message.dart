@@ -306,6 +306,7 @@ class Message {
   bool wasDeliveredQuietly;
   bool didNotifyRecipient;
   bool isBookmarked;
+  bool isPinned;
 
   final RxInt _error = RxInt(0);
   int get error => _error.value;
@@ -392,6 +393,7 @@ class Message {
     this.wasDeliveredQuietly = false,
     this.didNotifyRecipient = false,
     this.isBookmarked = false,
+    this.isPinned = false,
   }) {
       if (error != null) _error.value = error;
       if (dateRead != null) _dateRead.value = dateRead;
@@ -485,12 +487,13 @@ class Message {
       wasDeliveredQuietly: json['wasDeliveredQuietly'] ?? false,
       didNotifyRecipient: json['didNotifyRecipient'] ?? false,
       isBookmarked: json['isBookmarked'] ?? false,
+      isPinned: json['isPinned'] ?? false,
     );
   }
 
   /// Save a single message - prefer [bulkSave] for multiple messages rather
   /// than iterating through them
-  Message save({Chat? chat, bool updateIsBookmarked = false}) {
+  Message save({Chat? chat, bool updateIsBookmarked = false, bool updateIsPinned = false}) {
     if (kIsWeb) return this;
     Database.runInTransaction(TxMode.write, () {
       Message? existing = Message.findOne(guid: guid);
@@ -519,6 +522,9 @@ class Message {
       }
       if (!updateIsBookmarked) {
         isBookmarked = existing?.isBookmarked ?? isBookmarked;
+      }
+      if (!updateIsPinned) {
+        isPinned = existing?.isPinned ?? isPinned;
       }
 
       try {
@@ -1130,6 +1136,7 @@ class Message {
     }
 
     existing.isBookmarked = newMessage.isBookmarked;
+    existing.isPinned = newMessage.isPinned;
 
     return existing;
   }
@@ -1223,6 +1230,7 @@ class Message {
       "wasDeliveredQuietly": wasDeliveredQuietly,
       "didNotifyRecipient": didNotifyRecipient,
       "isBookmarked": isBookmarked,
+      "isPinned": isPinned,
     };
     if (includeObjects) {
       map['attachments'] = (attachments).map((e) => e!.toMap()).toList();
