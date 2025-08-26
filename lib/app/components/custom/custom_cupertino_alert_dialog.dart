@@ -961,20 +961,28 @@ class _PressableActionButtonState extends State<_PressableActionButton> {
     return _ActionButtonParentDataWidget(
       isPressed: _isPressed,
       child: MergeSemantics(
-        // TODO(mattcarroll): Button press dynamics need overhaul for iOS:
-        // https://github.com/flutter/flutter/issues/19786
-        child: GestureDetector(
-          excludeFromSemantics: true,
+        child: Listener(
           behavior: HitTestBehavior.opaque,
-          onTapDown: (TapDownDetails details) => setState(() {
-            _isPressed = true;
-          }),
-          onTapUp: (TapUpDetails details) => setState(() {
-            _isPressed = false;
-          }),
-          // TODO(mattcarroll): Cancel is currently triggered when user moves
-          //  past slop instead of off button: https://github.com/flutter/flutter/issues/19783
-          onTapCancel: () => setState(() => _isPressed = false),
+          onPointerDown: (_) {
+            setState(() => _isPressed = true);
+          },
+          onPointerUp: (_) {
+            setState(() => _isPressed = false);
+          },
+          onPointerCancel: (_) {
+            setState(() => _isPressed = false);
+          },
+          onPointerMove: (event) {
+            final RenderBox box = context.findRenderObject()! as RenderBox;
+            final Offset localPosition = box.globalToLocal(event.position);
+            final bool inside = localPosition.dx >= 0 &&
+                localPosition.dy >= 0 &&
+                localPosition.dx <= box.size.width &&
+                localPosition.dy <= box.size.height;
+            if (inside != _isPressed) {
+              setState(() => _isPressed = inside);
+            }
+          },
           child: widget.child,
         ),
       ),
@@ -1140,6 +1148,8 @@ class CupertinoDialogAction extends StatelessWidget {
     return DefaultTextStyle(
       style: textStyle,
       textAlign: TextAlign.center,
+      overflow: TextOverflow.visible,
+      softWrap: true,
       child: content,
     );
   }
