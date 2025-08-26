@@ -81,7 +81,9 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
           buildFriendMarker(friend);
           setState(() {});
         }
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to process FindMy location update', error: e, trace: s);
+      }
     });
 
     // Allow users to refresh after 30sec

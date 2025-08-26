@@ -2,6 +2,7 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:dlibphonenumber/dlibphonenumber.dart';
 import 'package:get/get.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 Future<String> formatPhoneNumber(dynamic item) async {
   String cc = Get.deviceLocale?.countryCode ?? "US";
@@ -25,7 +26,9 @@ Future<String> formatPhoneNumber(dynamic item) async {
   try {
     final parsed = PhoneNumberUtil.instance.parse(address, address.startsWith("+") ? null : cc);
     formatted = PhoneNumberUtil.instance.format(parsed, PhoneNumberFormat.international);
-  } catch (_) {}
+  } catch (e, s) {
+    Logger.error('Failed to format phone number $address', error: e, trace: s);
+  }
 
   return formatted ?? address;
 }

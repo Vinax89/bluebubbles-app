@@ -125,7 +125,9 @@ class _ChatInfoState extends OptimizedState<ChatInfo> {
     try {
       File file = File(chat.customAvatarPath!);
       file.delete();
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to delete chat photo file', error: e, trace: s);
+    }
     chat.customAvatarPath = null;
     chat.save(updateCustomAvatarPath: true);
     if (papi && ss.settings.enablePrivateAPI.value && (await ss.isMinBigSur) && ss.serverDetailsSync().item4 >= 226) {

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 // ignore: unnecessary_import
 import 'package:objectbox/objectbox.dart';
 import 'package:slugify/slugify.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 @Entity()
 class Contact {
@@ -60,7 +61,9 @@ class Contact {
       }
       try {
         dbId = Database.contacts.put(this);
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save contact due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }

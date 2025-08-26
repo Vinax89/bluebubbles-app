@@ -292,7 +292,9 @@ class Chat {
           http.markChatUnread(guid);
         }
       }
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to update chat read status via API', error: e, trace: s);
+    }
 
     return this;
   }

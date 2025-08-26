@@ -6,6 +6,7 @@ import 'package:bluebubbles/database/html/message.dart';
 import 'package:bluebubbles/database/html/objectbox.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:mime_type/mime_type.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 class Attachment {
   int? id;
@@ -53,7 +54,9 @@ class Attachment {
     if (metadata is String && metadata.isNotEmpty) {
       try {
         metadata = jsonDecode(metadata);
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to parse attachment metadata!', error: e, trace: s);
+      }
     }
 
     return Attachment(

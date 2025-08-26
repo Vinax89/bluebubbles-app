@@ -116,7 +116,9 @@ class AttachmentsService extends GetxService {
     try {
       // contact_card.dart does real avatar parsing since no plugins can parse the photo correctly when the base64 is multiline
       c.avatar = (isNullOrEmpty(contact.findFirstProperty(VConstants.photo)?.values.firstOrNull) ? null : [0]) as Uint8List?;
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to parse contact avatar', error: e, trace: s);
+    }
     return c;
   }
 
@@ -229,7 +231,9 @@ class AttachmentsService extends GetxService {
                 await SaverGallery.saveFile(file: file.path!, name: file.name, androidRelativePath: ss.settings.autoSavePicsLocation.value, androidExistNotSave: false);
               }
               return showSnackbar('Success', 'Saved attachment to gallery!');
-            } catch (_) {}
+            } catch (e, s) {
+              Logger.error('Failed to save attachment to gallery', error: e, trace: s);
+            }
           }
           savePath = ss.settings.autoSaveDocsLocation.value;
         }
@@ -297,7 +301,9 @@ class AttachmentsService extends GetxService {
     if (useCachedFile) {
       try {
         return await cachedFile.readAsBytes();
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to read cached thumbnail', error: e, trace: s);
+      }
     }
 
     final thumbnail = await VideoThumbnail.thumbnailData(
@@ -352,7 +358,9 @@ class AttachmentsService extends GetxService {
   
             originalFile = File("$filePath.png");
           }
-        } catch (_) {}
+        } catch (e, s) {
+          Logger.error('Failed to decode HEIC image', error: e, trace: s);
+        }
       }
     }
 

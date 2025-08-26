@@ -13,6 +13,7 @@ import 'package:bluebubbles/database/database.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/string_utils.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -156,7 +157,9 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
     try {
       final response = await http.handleiMessageState(c.address);
       c.iMessage.value = response.data["data"]["available"];
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to fetch iMessage state for ${c.address}', error: e, trace: s);
+    }
     addressController.text = "";
     findExistingChat();
   }
@@ -202,7 +205,9 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
         } else {
           existingChat = Chat.findOne(chatIdentifier: slugify(address, delimiter: ''));
         }
-      } catch (_) {}
+      } catch (e, s) {
+        Logger.error('Failed to search for existing chat', error: e, trace: s);
+      }
     }
     // match each selected contact to a participant in a chat
     if (existingChat == null) {
@@ -726,7 +731,9 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
                             try {
                               await http.singleChat(chat.guid);
                               existsOnServer = true;
-                            } catch (_) {}
+                            } catch (e, s) {
+                              Logger.error('Failed to fetch chat from server', error: e, trace: s);
+                            }
                           }
                           if (chat != null && existsOnServer) {
                             sendInitialMessage() async {

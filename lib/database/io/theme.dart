@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 // ignore: unnecessary_import
 import 'package:objectbox/objectbox.dart';
 
+import 'package:bluebubbles/utils/logger/logger.dart';
 @Entity()
 class ThemeStruct {
   int? id;
@@ -61,7 +62,9 @@ class ThemeStruct {
         } else if (id == null || existing == null) {
           id = Database.themes.put(this);
         }
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save theme due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }

@@ -496,7 +496,9 @@ class Chat {
         } else if (existing == null && participants.isEmpty) {
           cm.fetchChat(guid);
         }
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save chat due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }
@@ -672,7 +674,9 @@ class Chat {
           http.markChatUnread(guid);
         }
       }
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to update chat read status via API', error: e, trace: s);
+    }
 
     return this;
   }

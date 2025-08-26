@@ -620,7 +620,9 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
                               bytes: data,
                             ));
                             return;
-                          } catch (_) {}
+                          } catch (e, s) {
+                            Logger.error('Failed to add GIF attachment', error: e, trace: s);
+                          }
                         }
                       }
                     }),

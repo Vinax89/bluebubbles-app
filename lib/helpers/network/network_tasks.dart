@@ -113,7 +113,9 @@ class NetworkTasks {
           http.originOverride = null;
         }
       });
-    } catch (_) {}
+    } catch (e, s) {
+      Logger.error('Failed to detect localhost', error: e, trace: s);
+    }
 
     if (http.originOverride != null) return;
 

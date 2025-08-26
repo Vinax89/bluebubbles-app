@@ -146,7 +146,9 @@ class Message {
       if (json["metadata"] is String) {
         try {
           metadata = jsonDecode(json["metadata"]);
-        } catch (_) {}
+        } catch (e, s) {
+          Logger.error('Failed to parse metadata!', error: e, trace: s);
+        }
       } else {
         metadata = json["metadata"];
       }

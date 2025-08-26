@@ -11,6 +11,7 @@ import 'package:get/get.dart' hide Condition;
 // ignore: unnecessary_import
 import 'package:objectbox/objectbox.dart';
 import 'package:tuple/tuple.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 @Entity()
 class Handle {
@@ -123,7 +124,9 @@ class Handle {
       }
       try {
         id = Database.handles.put(this);
-      } on UniqueViolationException catch (_) {}
+      } on UniqueViolationException catch (e, s) {
+        Logger.error('Failed to save handle due to unique constraint', error: e, trace: s);
+      }
     });
     return this;
   }
