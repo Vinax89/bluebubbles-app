@@ -24,7 +24,7 @@ import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/helpers/backend/startup_tasks.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/network/http_overrides.dart';
-import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/services/service_locator.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:bluebubbles/main.dart' show Main;
 
@@ -64,6 +64,7 @@ Future<void> initializeApp(bool bubble, List<String> arguments) async {
 
 Future<Exception?> _initServices(bool bubble, List<String> arguments) async {
   return await _captureError(() async {
+    setupServices();
     await StartupTasks.initStartupServices(isBubble: bubble);
     StartupTasks.onStartup().then((_) {
       Logger.info("Startup tasks completed");
