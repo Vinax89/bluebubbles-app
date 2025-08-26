@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:bluebubbles/app/components/custom_text_editing_controllers.dart';
 import 'package:bluebubbles/app/layouts/chat_creator/chat_creator.dart';
 import 'package:bluebubbles/app/layouts/conversation_details/dialogs/timeframe_picker.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/attachment/attachment_holder.dart';
@@ -829,10 +828,47 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
     }
   }
 
-  void edit() {
+  void edit() async {
     popDetails();
-    final FocusNode? node = kIsDesktop || kIsWeb ? FocusNode() : null;
-    cvController.editing.add(Tuple3(message, part, SpellCheckTextEditingController(text: part.text!, focusNode: node)));
+    final controller = TextEditingController(text: part.text ?? "");
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: context.theme.colorScheme.properSurface,
+          title: Text("Edit Message", style: context.theme.textTheme.titleLarge),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: 1,
+            maxLines: 8,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && result.isNotEmpty && result != part.text) {
+      final response = await http.edit(
+        message.guid!,
+        result,
+        "Edited to: “$result”",
+        partIndex: part.part,
+      );
+      if (response.statusCode == 200) {
+        final updatedMessage = Message.fromMap(response.data['data']);
+        ah.handleUpdatedMessage(chat, updatedMessage, null);
+      }
+    }
   }
 
   void delete() {
@@ -1000,11 +1036,7 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
             onTap: unsend,
             action: DetailsMenuAction.UndoSend,
           ),
-        if (ss.isMinVenturaSync &&
-            message.isFromMe! &&
-            !message.guid!.startsWith("temp") &&
-            ss.serverDetailsSync().item4 >= 148 &&
-            (part.text?.isNotEmpty ?? false))
+        if (message.isFromMe! && !message.guid!.startsWith("temp") && (part.text?.isNotEmpty ?? false))
           DetailsMenuActionWidget(
             onTap: edit,
             customTitle: canEdit ? 'Edit' : 'Edit (too old)',
