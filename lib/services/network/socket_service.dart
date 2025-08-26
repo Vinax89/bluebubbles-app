@@ -13,6 +13,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:workmanager/workmanager.dart';
 
 SocketService socket = Get.isRegistered<SocketService>() ? Get.find<SocketService>() : Get.put(SocketService());
 
@@ -68,6 +69,7 @@ class SocketService extends GetxService {
     super.onInit();
 
     Logger.debug("Initializing socket service...");
+    Workmanager().initialize(callbackDispatcher);
     startSocket();
     Connectivity().onConnectivityChanged.listen((event) {
       if (!event.contains(ConnectivityResult.wifi) &&
@@ -357,6 +359,30 @@ class SocketService extends GetxService {
       Logger.info('95th percentile latency: ${p95Latency.inMilliseconds} ms');
     }
     Logger.info('Throughput: ${throughput.toStringAsFixed(2)} msg/s');
+  }
+
+  void scheduleMessage(String chatGuid, String message, DateTime scheduledFor) {
+    final delay = scheduledFor.difference(DateTime.now());
+    Workmanager().registerOneOffTask(
+      'send_\${scheduledFor.millisecondsSinceEpoch}',
+      'sendScheduledMessage',
+      initialDelay: delay,
+      inputData: {'chatGuid': chatGuid, 'message': message},
+    );
+    Timer(delay, () {
+      sendMessage('send-message', {'chatGuid': chatGuid, 'message': message});
+    });
+  }
+
+  static void callbackDispatcher() {
+    Workmanager().executeTask((task, inputData) async {
+      final chatGuid = inputData?['chatGuid'];
+      final message = inputData?['message'];
+      if (chatGuid != null && message != null) {
+        socket.sendMessage('send-message', {'chatGuid': chatGuid, 'message': message});
+      }
+      return Future.value(true);
+    });
   }
 
   void handleStatusUpdate(SocketState status, dynamic data) {

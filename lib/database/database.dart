@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
@@ -89,6 +90,17 @@ class Database {
 
   static Future<void> waitForInit() async {
     await initComplete.future;
+  }
+
+  static Future<void> saveScheduledDraft(String chatGuid, String message, DateTime scheduledFor) async {
+    final drafts = ss.prefs.getStringList('scheduled-drafts') ?? [];
+    final data = {
+      'chatGuid': chatGuid,
+      'message': message,
+      'scheduledFor': scheduledFor.toIso8601String(),
+    };
+    drafts.add(jsonEncode(data));
+    await ss.prefs.setStringList('scheduled-drafts', drafts);
   }
 
   static Future<void> _initDatabaseMobile({bool? storeOpenStatus}) async {
