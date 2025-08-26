@@ -251,10 +251,15 @@ class ActionHandler extends GetxService {
     return completer.future;
   }
   
-  Future<void> prepAttachment(Chat c, Message m) async {
+  Future<void> prepAttachment(Chat c, Message m, {bool isAudioMessage = false}) async {
+    if (m.attachments.isEmpty) return;
     final attachment = m.attachments.first!;
     final progress = Tuple2(attachment.guid!, 0.0.obs);
     attachmentProgress.add(progress);
+    if (isAudioMessage) {
+      attachment.metadata ??= {};
+      attachment.metadata['isAudioMessage'] = true;
+    }
     // Save the attachment to storage and DB
     if (!kIsWeb) {
       String pathName = "${fs.appDocDir.path}/attachments/${attachment.guid}/${attachment.transferName}";

@@ -20,7 +20,7 @@ class OutgoingQueue extends Queue {
       case QueueType.sendMessage:
         return await ah.prepMessage(item.chat, item.message, item.selected, item.reaction, clearNotificationsIfFromMe: !(item.customArgs?['notifReply'] ?? false));
       case QueueType.sendAttachment:
-        return await ah.prepAttachment(item.chat, item.message);
+        return await ah.prepAttachment(item.chat, item.message, isAudioMessage: item.customArgs?['audio'] ?? false);
       case QueueType.sendSticker:
         return await ah.prepSticker(item.chat, item.message);
       default:
