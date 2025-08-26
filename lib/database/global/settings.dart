@@ -127,6 +127,9 @@ class Settings {
   final RxBool enableUnifiedPush = false.obs;
   final RxString endpointUnifiedPush = RxString("");
 
+  // Web push notifications
+  final RxBool enableWebPush = false.obs;
+
   // Quick tapback settings
   final RxBool enableQuickTapback = false.obs;
   final RxString quickTapbackType = ReactionTypes.toList()[0].obs; // The 'love' reaction
@@ -369,6 +372,7 @@ class Settings {
       'privateAPIAttachmentSend': privateAPIAttachmentSend.value,
       'enableUnifiedPush': enableUnifiedPush.value,
       'endpointUnifiedPush': endpointUnifiedPush.value,
+      'enableWebPush': enableWebPush.value,
       'highlightSelectedChat': highlightSelectedChat.value,
       'enablePrivateAPI': enablePrivateAPI.value,
       'privateSendTypingIndicators': privateSendTypingIndicators.value,
@@ -519,6 +523,7 @@ class Settings {
     ss.settings.hideMessageContent.value = map['generateFakeMessageContent'] ?? false;
     ss.settings.enableUnifiedPush.value = map['enableUnifiedPush'] ?? false;
     ss.settings.endpointUnifiedPush.value = map['endpointUnifiedPush'] ?? "";
+    ss.settings.enableWebPush.value = map['enableWebPush'] ?? false;
     ss.settings.enableQuickTapback.value = map['enableQuickTapback'] ?? false;
     ss.settings.quickTapbackType.value = map['quickTapbackType'] ?? ReactionTypes.toList()[0];
     ss.settings.materialRightAction.value = map['materialRightAction'] != null
@@ -667,6 +672,7 @@ class Settings {
     s.hideMessageContent.value = map['generateFakeMessageContent'] ?? false;
     s.enableUnifiedPush.value = map['enableUnifiedPush'] ?? false;
     s.endpointUnifiedPush.value = map['endpointUnifiedPush'] ?? "";
+    s.enableWebPush.value = map['enableWebPush'] ?? false;
     s.enableQuickTapback.value = map['enableQuickTapback'] ?? false;
     s.quickTapbackType.value = map['quickTapbackType'] ?? ReactionTypes.toList()[0];
     s.materialRightAction.value = map['materialRightAction'] != null

@@ -42,6 +42,13 @@ class SettingsService extends GetxService {
     settings.keepAppAlive.listen((val) {
       ls.keepAppAlive = val;
     });
+    if (kIsWeb) {
+      settings.enableWebPush.listen((val) {
+        if (val) {
+          fcm.registerDevice();
+        }
+      });
+    }
     if (!headless && !kIsWeb && !kIsDesktop) {
       // refresh rate
       try {
