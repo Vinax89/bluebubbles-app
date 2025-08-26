@@ -277,4 +277,66 @@ class Database {
     Database.messages.removeAll();
     Database.themes.removeAll();
   }
+
+  /// Serializes core database boxes into a [Map].
+  ///
+  /// The map can later be restored with [importData].
+  static Future<Map<String, dynamic>> exportData() async {
+    if (kIsWeb) return {};
+    await waitForInit();
+    return runInTransaction(TxMode.read, () {
+      return {
+        'attachments': attachments.getAll().map((e) => e.toMap()).toList(),
+        'chats': chats.getAll().map((e) => e.toMap()).toList(),
+        'contacts': contacts.getAll().map((e) => e.toMap()).toList(),
+        'handles': handles.getAll().map((e) => e.toMap()).toList(),
+        'messages': messages.getAll().map((e) => e.toMap()).toList(),
+      };
+    });
+  }
+
+  /// Restores database boxes from the serialized [data] map created by
+  /// [exportData].  Existing data will be cleared before insertion.
+  static Future<void> importData(Map<String, dynamic> data) async {
+    if (kIsWeb) return;
+    await waitForInit();
+    runInTransaction(TxMode.write, () {
+      attachments.removeAll();
+      chats.removeAll();
+      contacts.removeAll();
+      handles.removeAll();
+      messages.removeAll();
+
+      attachments.putMany(
+        (data['attachments'] as List? ?? [])
+            .map((e) => Attachment.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        mode: PutMode.insert,
+      );
+      handles.putMany(
+        (data['handles'] as List? ?? [])
+            .map((e) => Handle.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        mode: PutMode.insert,
+      );
+      contacts.putMany(
+        (data['contacts'] as List? ?? [])
+            .map((e) => Contact.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        mode: PutMode.insert,
+      );
+      chats.putMany(
+        (data['chats'] as List? ?? [])
+            .map((e) => Chat.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        mode: PutMode.insert,
+      );
+      messages.putMany(
+        (data['messages'] as List? ?? [])
+            .map((e) => Message.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        mode: PutMode.insert,
+      );
+    });
+  }
 }
