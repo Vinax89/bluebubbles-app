@@ -4,7 +4,15 @@ import 'package:dio/dio.dart';
 
 Message handleSendError(dynamic error, Message m) {
   if (error is Response) {
-    m.guid = m.guid!.replaceAll("temp", "error-${error.data['error']['message'] ?? error.data.toString()}");
+    dynamic data = error.data;
+    String errorMessage;
+    if (data is Map && data['error'] is Map && (data['error'] as Map).containsKey('message')) {
+      errorMessage = (data['error'] as Map)['message'].toString();
+    } else {
+      errorMessage = data.toString();
+    }
+
+    m.guid = m.guid!.replaceAll("temp", "error-$errorMessage");
     m.error = error.statusCode ?? MessageError.BAD_REQUEST.code;
   } else if (error is DioException) {
     String _error;
