@@ -2,8 +2,9 @@ name: Flutter Tests (fixed)
 
 on:
   pull_request:
+    branches: ["master"]
   push:
-    branches: [ master ]
+    branches: ["master"]
 
 jobs:
   test:
