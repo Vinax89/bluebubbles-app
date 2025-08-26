@@ -1321,6 +1321,36 @@ class HttpService extends GetxService {
     }, checkOrigin: false);
   }
 
+  /// Retrieve all active client sessions from the server.
+  Future<Response> getSessions() async {
+    return runApiGuarded(() async {
+      final response = await dio.get(
+        "$apiRoot/sessions",
+      );
+      return returnSuccessOrError(response);
+    });
+  }
+
+  /// Request a refreshed session token for the given [deviceId].
+  Future<Response> refreshSession(String deviceId) async {
+    return runApiGuarded(() async {
+      final response = await dio.post(
+        "$apiRoot/sessions/$deviceId/refresh",
+      );
+      return returnSuccessOrError(response);
+    });
+  }
+
+  /// Revoke the session associated with [deviceId].
+  Future<Response> revokeSession(String deviceId) async {
+    return runApiGuarded(() async {
+      final response = await dio.delete(
+        "$apiRoot/sessions/$deviceId",
+      );
+      return returnSuccessOrError(response);
+    });
+  }
+
 }
 
 /// Intercepts API requests, responses, and errors and logs them to console

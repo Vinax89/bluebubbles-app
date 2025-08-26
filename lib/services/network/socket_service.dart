@@ -8,6 +8,7 @@ import 'package:bluebubbles/utils/crypto_utils.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/helpers/network/network_helpers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -36,6 +37,20 @@ class SocketService extends GetxService {
   RxString lastError = "".obs;
   Timer? _reconnectTimer;
   late Socket socket;
+
+  String? _deviceId;
+
+  Future<String> _getDeviceId() async {
+    _deviceId ??= await getDeviceName();
+    return _deviceId!;
+  }
+
+  Future<void> _ensureSession() async {
+    final id = await _getDeviceId();
+    if (!sessionRegistry.validate(id)) {
+      await sessionRegistry.refresh(id);
+    }
+  }
 
   DateTime? _lastDisconnect;
   DateTime? _lastConnect;
@@ -72,9 +87,13 @@ class SocketService extends GetxService {
     super.onClose();
   }
 
-  void startSocket() {
+  Future<void> startSocket() async {
+    final id = await _getDeviceId();
+    await _ensureSession();
+    final token = sessionRegistry.get(id)?.token;
+
     OptionBuilder options = OptionBuilder()
-        .setQuery({"guid": password})
+        .setQuery({"guid": password, "device_id": id, if (token != null) "session_token": token})
         .setTransports(['websocket', 'polling'])
         .setExtraHeaders(http.headers)
         // Disable so that we can create the listeners first
@@ -108,6 +127,10 @@ class SocketService extends GetxService {
     }
 
     socket.on("ft-call-status-changed", (data) => ah.handleEvent("ft-call-status-changed", data, 'DartSocket'));
+    socket.on("session-invalid", (data) async {
+      await _ensureSession();
+      restartSocket();
+    });
     socket.on("new-message", (data) => ah.handleEvent("new-message", data, 'DartSocket'));
     socket.on("updated-message", (data) => ah.handleEvent("updated-message", data, 'DartSocket'));
     socket.on("typing-indicator", (data) => ah.handleEvent("typing-indicator", data, 'DartSocket'));
@@ -146,8 +169,10 @@ class SocketService extends GetxService {
     clearServerUrl(saveAdditionalSettings: ["guidAuthKey"]);
   }
 
-  Future<Map<String, dynamic>> sendMessage(String event, Map<String, dynamic> message) {
+  Future<Map<String, dynamic>> sendMessage(String event, Map<String, dynamic> message) async {
     Completer<Map<String, dynamic>> completer = Completer();
+
+    await _ensureSession();
 
     socket.emitWithAck(event, message, ack: (response) {
       if (response['encrypted'] == true) {
