@@ -1,3 +1,4 @@
+@Tags(['stress'])
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -56,6 +57,10 @@ void main() {
   }
 
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(() {
+    Get.reset();
+  });
 
   test('SocketService handles disconnect during message flood', () async {
     final service = TestSocketService();
