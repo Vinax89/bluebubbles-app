@@ -49,4 +49,27 @@ void main() {
     final double fontSize = richText.text.style!.fontSize!;
     expect(size.height, greaterThan(fontSize * 1.5));
   });
+
+  testWidgets('Single-word action text wraps instead of ellipsizing', (WidgetTester tester) async {
+    const String longWord = 'SupercalifragilisticexpialidociousSupercalifragilisticexpialidocious';
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: CupertinoAlertDialog(
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () {},
+              child: const Text(longWord),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final Size size = tester.getSize(find.text(longWord));
+    final RichText richText = tester.widget<RichText>(
+      find.descendant(of: find.text(longWord), matching: find.byType(RichText)),
+    );
+    final double fontSize = richText.text.style!.fontSize!;
+    expect(size.height, greaterThan(fontSize * 1.5));
+  });
 }
