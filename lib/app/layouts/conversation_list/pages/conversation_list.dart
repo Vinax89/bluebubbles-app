@@ -114,7 +114,7 @@ class ConversationList extends CustomStateful<ConversationListController> {
   State<StatefulWidget> createState() => _ConversationListState();
 }
 
-class _ConversationListState extends CustomState<ConversationList, void, ConversationListController> {
+class _ConversationListState extends CustomState<ConversationList, void, ConversationListController> with RouteAware {
   @override
   void initState() {
     super.initState();
@@ -123,21 +123,6 @@ class _ConversationListState extends CustomState<ConversationList, void, Convers
         : controller.showUnknownSenders
             ? "Unknown"
             : "Messages";
-
-    if (!ss.settings.reachedConversationList.value) {
-      Timer.periodic(const Duration(seconds: 1), (Timer t) {
-        bool notInSettings = ns.isTabletMode(context)
-            ? !Get.keys.containsKey(3) || Get.keys[3]?.currentContext == null
-            : Get.rawRoute?.settings.name == "/";
-        // This only runs once
-        if (notInSettings) {
-          ss.settings.reachedConversationList.value = true;
-          ss.saveSettings();
-          ss.getServerDetails(refresh: true);
-          t.cancel();
-        }
-      });
-    }
 
     // Extra safety check to make sure Android doesn't open the last chat when opening the app
     if (kIsDesktop || kIsWeb) {
@@ -160,6 +145,34 @@ class _ConversationListState extends CustomState<ConversationList, void, Convers
         });
       }
     }
+  }
+
+  void _onRouteReenter() {
+    if (!ss.settings.reachedConversationList.value) {
+      ss.settings.reachedConversationList.value = true;
+      ss.saveSettings();
+      ss.getServerDetails(refresh: true);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      _onRouteReenter();
+    }
+  }
+
+  @override
+  void didPopNext() {
+    _onRouteReenter();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   @override
