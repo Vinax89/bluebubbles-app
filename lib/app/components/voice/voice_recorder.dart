@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+
+typedef SpeechResultCallback = void Function(String);
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
@@ -18,6 +21,26 @@ class VoiceRecorder extends StatefulWidget {
   final Size textFieldSize;
   final bool iOS;
   final bool samsung;
+
+  static Future<void> Function(SpeechResultCallback) startTranscription = _startTranscription;
+  static Future<String> Function() stopTranscription = _stopTranscription;
+  static final stt.SpeechToText _speech = stt.SpeechToText();
+  static String _lastWords = '';
+
+  static Future<void> _startTranscription(SpeechResultCallback onResult) async {
+    _lastWords = '';
+    if (await _speech.initialize()) {
+      await _speech.listen(onResult: (res) {
+        _lastWords = res.recognizedWords;
+        onResult(_lastWords);
+      });
+    }
+  }
+
+  static Future<String> _stopTranscription() async {
+    await _speech.stop();
+    return _lastWords;
+  }
 
   @override
   State<VoiceRecorder> createState() => _VoiceRecorderState();

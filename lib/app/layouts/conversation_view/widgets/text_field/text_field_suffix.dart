@@ -4,6 +4,7 @@ import 'package:bluebubbles/app/components/custom_text_editing_controllers.dart'
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/effects/send_effect_picker.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/attachment/audio_player.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/text_field/send_button.dart';
+import 'package:bluebubbles/app/components/voice/voice_recorder.dart';
 import 'package:bluebubbles/app/wrappers/cupertino_icon_wrapper.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
@@ -44,6 +45,8 @@ class TextFieldSuffix extends StatefulWidget {
 class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
 
   bool get isChatCreator => widget.isChatCreator;
+
+  String? _transcript;
 
   void deleteAudioRecording(String path) {
     File(path).delete();
@@ -95,6 +98,8 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                   if (widget.controller == null) return;
                   widget.controller!.showRecording.toggle();
                   if (widget.controller!.showRecording.value) {
+                    _transcript = null;
+                    VoiceRecorder.startTranscription((res) => _transcript = res);
                     if (kIsDesktop) {
                       File temp = File(join(fs.appDocDir.path, "temp", "recorder", "${widget.controller!.chat.guid.characters.where((c) => c.isAlphabetOnly || c.isNumericOnly).join()}.m4a"));
                       await RecordPlatform.instance.start(widget.controller!.chat.guid, const RecordConfig(bitRate: 320000), path: temp.path);
@@ -105,6 +110,7 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                       bitRate: 320000,
                     );
                   } else {
+                    await VoiceRecorder.stopTranscription().then((value) => _transcript = value);
                     late final String? path;
                     late final PlatformFile file;
                     if (kIsDesktop) {
@@ -146,6 +152,7 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                                   key: Key("AudioMessage-$path"),
                                   file: file,
                                   attachment: null,
+                                  transcript: _transcript,
                                 ),
                               )
                             ],
@@ -158,6 +165,7 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                               ),
                               onPressed: () {
                                 deleteAudioRecording(file.path!);
+                                _transcript = null;
                                 Get.back();
                               },
                             ),
@@ -170,8 +178,10 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                                 await widget.controller!.send(
                                   [file],
                                   "", "", null, null, null, true,
+                                  audioTranscript: _transcript,
                                 );
                                 deleteAudioRecording(file.path!);
+                                _transcript = null;
                                 Get.back();
                               },
                             ),
