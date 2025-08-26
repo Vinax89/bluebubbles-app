@@ -547,7 +547,10 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
                                                                                     ? TextInputAction.send
                                                                                     : TextInputAction.newline,
                                                                                 cursorColor: context.theme.extension<BubbleText>()!.bubbleText.color,
-                                                                                cursorHeight: context.theme.extension<BubbleText>()!.bubbleText.fontSize! * 1.25 * (message.isBigEmoji ? 3 : 1),
+                                                                                cursorHeight: MediaQuery.of(context).textScaler.scale(
+                                                                                    context.theme.extension<BubbleText>()!.bubbleText.fontSize! *
+                                                                                        1.25 *
+                                                                                        (message.isBigEmoji ? 3 : 1)),
                                                                                 decoration: InputDecoration(
                                                                                   contentPadding: EdgeInsets.all(iOS ? 10 : 12.5),
                                                                                   isDense: true,

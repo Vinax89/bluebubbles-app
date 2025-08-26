@@ -157,7 +157,9 @@ class ReactionWidgetState extends OptimizedState<ReactionWidget> {
                 builder: (context) {
                   final text = Text(
                     ReactionTypes.reactionToEmoji[reactionType] ?? "X",
-                    style: const TextStyle(fontSize: 15, fontFamily: 'Apple Color Emoji'),
+                    style: TextStyle(
+                        fontSize: MediaQuery.of(context).textScaler.scale(15),
+                        fontFamily: 'Apple Color Emoji'),
                     textAlign: TextAlign.center,
                   );
                   // rotate thumbs down to match iOS
