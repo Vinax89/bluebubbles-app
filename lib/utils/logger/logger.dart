@@ -14,10 +14,25 @@ import 'package:logger/logger.dart' as LoggerFactory;
 
 import 'outputs/debug_console_output.dart';
 
+BaseLogger initLogger({
+  LoggerFactory.LogFilter? filter,
+  LoggerFactory.LogOutput? output,
+  LoggerFactory.Level? level,
+  bool? showColors,
+  Map<Level, bool>? excludeBoxes,
+}) {
+  if (Get.isRegistered<BaseLogger>()) return Get.find<BaseLogger>();
+  return Get.put(BaseLogger(
+    filter: filter,
+    output: output,
+    level: level,
+    showColors: showColors,
+    excludeBoxes: excludeBoxes,
+  ));
+}
+
 // ignore: non_constant_identifier_names
-BaseLogger Logger = Get.isRegistered<BaseLogger>()
-    ? Get.find<BaseLogger>()
-    : Get.put(BaseLogger());
+BaseLogger get Logger => Get.find<BaseLogger>();
 
 enum LogLevel { INFO, WARN, ERROR, DEBUG, TRACE, FATAL }
 
@@ -31,6 +46,18 @@ const Map<Level, bool> defaultExcludeBoxes = {
 };
 
 class BaseLogger extends GetxService {
+  BaseLogger({
+    LoggerFactory.LogFilter? filter,
+    LoggerFactory.LogOutput? output,
+    LoggerFactory.Level? level,
+    bool? showColors,
+    Map<Level, bool>? excludeBoxes,
+  })  : _currentFilter = filter,
+        _currentOutput = output,
+        _currentLevel = level,
+        _showColors = showColors,
+        _excludeBoxes = excludeBoxes;
+
   LoggerFactory.Logger _logger = LoggerFactory.Logger();
 
   final StreamController<String> logStream =
