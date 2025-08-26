@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:universal_io/io.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 /// Get an instance of our [CloudMessagingService]
 CloudMessagingService fcm =
@@ -65,10 +66,39 @@ class CloudMessagingService extends GetxService {
       closeCompleter = true;
     }
 
-    // Don't do anything if on web or desktop
-    if (kIsWeb || kIsDesktop) {
-      Logger.debug("Platform ${kIsWeb ? "web" : Platform.operatingSystem} detected, not authing with FCM!",
-          tag: 'FCM-Auth');
+    // Handle web registration
+    if (kIsWeb) {
+      if (!ss.settings.enableWebPush.value) {
+        Logger.debug("Web push disabled, not authing with FCM!", tag: 'FCM-Auth');
+        closeCompleter = true;
+      } else {
+        try {
+          await FirebaseMessaging.instance.requestPermission();
+          token = await FirebaseMessaging.instance.getToken();
+          if (token == null) {
+            Logger.warn("Failed to get FCM token for web", tag: 'FCM-Auth');
+          } else {
+            Logger.info('Registering device with server...', tag: 'FCM-Auth');
+            String deviceName = await getDeviceName();
+            await http.addFcmDevice(deviceName.trim(), token!.trim()).then((_) {
+              Logger.info('Device registration successful!', tag: 'FCM-Auth');
+              completer?.complete();
+            }).catchError((ex) {
+              completer?.completeError(ex);
+              throw Exception("Failed to add FCM device to the server! Token: ${_redactToken(token)}, ${ex.toString()}");
+            });
+          }
+        } catch (e, stack) {
+          Logger.error('Failed to register web push with FCM', error: e, trace: stack, tag: 'FCM-Auth');
+          completer?.completeError(e);
+        }
+        return;
+      }
+    }
+
+    // Don't do anything if on desktop
+    if (kIsDesktop) {
+      Logger.debug("Platform ${Platform.operatingSystem} detected, not authing with FCM!", tag: 'FCM-Auth');
       closeCompleter = true;
     }
 
