@@ -262,6 +262,8 @@ class BaseLogger extends GetxService {
       }
     }
 
+    if (currentLog.isNotEmpty) logs.add(currentLog);
+
     // Take the last [maxLines] logs.
     // We only want the logs starting from the end. But we want to keep the order of the logs.
     logs = logs.reversed.take(maxLines).toList().reversed.toList();
