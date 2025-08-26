@@ -3,6 +3,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -47,8 +48,8 @@ void main() {
       }
       stopwatch.stop();
       // Output memory usage for manual inspection
-      print('Memory usage (RSS): $memUsage');
-      print('Total elapsed: ${stopwatch.elapsed}');
+      debugPrint('Memory usage (RSS): $memUsage');
+      debugPrint('Total elapsed: ${stopwatch.elapsed}');
     });
 
     test('concurrent initialization', () async {
