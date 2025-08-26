@@ -7,10 +7,10 @@ import 'package:bluebubbles/app/layouts/settings/widgets/settings_widgets.dart';
 import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
@@ -145,7 +145,7 @@ class _AboutPanelState extends OptimizedState<AboutPanel> {
                                 elevation: 0,
                                 scrolledUnderElevation: 3,
                                 surfaceTintColor: context.theme.colorScheme.primary,
-                                leading: buildBackButton(context),
+                                leading: const BackButton(),
                                 backgroundColor: headerColor,
                                 iconTheme: IconThemeData(color: context.theme.colorScheme.primary),
                                 centerTitle: iOS,

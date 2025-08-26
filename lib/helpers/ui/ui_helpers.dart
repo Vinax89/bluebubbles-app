@@ -7,9 +7,9 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:gesture_x_detector/gesture_x_detector.dart';
 import 'package:get/get.dart';
@@ -60,48 +60,6 @@ class BackButton extends StatelessWidget {
       ),
     );
   }
-}
-
-// todo remove
-Widget buildBackButton(BuildContext context, {EdgeInsets padding = EdgeInsets.zero, double? iconSize, Skins? skin, bool Function()? callback}) {
-  return Material(
-    color: Colors.transparent,
-    child: Container(
-      padding: padding,
-      width: 48,
-      child: XGestureDetector(
-        supportTouch: true,
-        onTap: !kIsDesktop ? null : (details) {
-          final result = callback?.call() ?? true;
-          if (result) {
-            if (Get.isSnackbarOpen) {
-              Get.closeAllSnackbars();
-            }
-            Navigator.of(context).pop();
-          }
-        },
-        child: IconButton(
-          iconSize: iconSize ?? (ss.settings.skin.value != Skins.Material ? 30 : 24),
-          icon: skin != null
-              ? Icon(skin != Skins.Material ? CupertinoIcons.back : Icons.arrow_back, color: context.theme.colorScheme.primary)
-              : Obx(() => Icon(ss.settings.skin.value != Skins.Material ? CupertinoIcons.back : Icons.arrow_back,
-                  color: context.theme.colorScheme.primary)),
-          onPressed: () {
-            if (kIsDesktop) return;
-            final result = callback?.call() ?? true;
-            if (result) {
-              if (Get.isSnackbarOpen) {
-                Get.closeAllSnackbars();
-              }
-              Navigator.of(context).pop();
-            }
-          },
-        ),
-      ),
-    ),
-  );
-}
-
 Widget buildProgressIndicator(BuildContext context, {double size = 20, double strokeWidth = 2}) {
   return ss.settings.skin.value == Skins.iOS
       ? Theme(

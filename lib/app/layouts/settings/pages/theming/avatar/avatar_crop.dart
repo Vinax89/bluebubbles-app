@@ -4,7 +4,7 @@ import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:universal_io/io.dart';
@@ -91,7 +91,7 @@ class _AvatarCropState extends OptimizedState<AvatarCrop> {
               elevation: 0,
               scrolledUnderElevation: 3,
               surfaceTintColor: context.theme.colorScheme.primary,
-              leading: buildBackButton(context),
+              leading: const BackButton(),
               backgroundColor: headerColor,
               centerTitle: iOS,
               title: Text(

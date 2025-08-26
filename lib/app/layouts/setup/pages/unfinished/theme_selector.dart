@@ -5,7 +5,7 @@ import 'package:bluebubbles/helpers/ui/ui_helpers.dart';
 import 'package:bluebubbles/app/components/avatars/contact_avatar_widget.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -771,7 +771,7 @@ Widget buildConversationViewHeader(BuildContext context, Chat chat, ThemeData th
         ),
         preferredSize: const Size.fromHeight(0.5),
       ),
-      leading: buildBackButton(context, skin: skin),
+      leading: const BackButton(),
       backgroundColor: backgroundColor,
       actionsIconTheme: IconThemeData(color: theme.primaryColor),
       iconTheme: IconThemeData(color: theme.primaryColor),
@@ -827,7 +827,7 @@ Widget buildConversationViewHeader(BuildContext context, Chat chat, ThemeData th
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              buildBackButton(context, skin: skin),
+              const BackButton(),
               if (ChatBloc().unreads.value > 0)
                 Container(
                   width: 25.0,

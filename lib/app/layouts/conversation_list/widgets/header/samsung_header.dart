@@ -4,7 +4,7 @@ import 'package:bluebubbles/app/layouts/conversation_list/widgets/header/header_
 import 'package:bluebubbles/app/layouts/conversation_list/pages/search/search_view.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:get/get.dart';
 
@@ -102,13 +102,7 @@ class _SamsungHeaderState extends CustomState<SamsungHeader, void, ConversationL
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           if (showArchived || showUnknown)
-                            IconButton(
-                                onPressed: () async {
-                                  Navigator.of(context).pop();
-                                },
-                                padding: EdgeInsets.zero,
-                                icon: buildBackButton(context)
-                            ),
+                            const BackButton(),
                           if (!showArchived && !showUnknown)
                             const SizedBox.shrink(),
                           Row(

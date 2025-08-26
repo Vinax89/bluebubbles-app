@@ -4,7 +4,7 @@ import 'package:bluebubbles/app/wrappers/scrollbar_wrapper.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:get/get.dart';
@@ -104,7 +104,7 @@ class _LiveLoggingPanel extends State<LiveLoggingPanel> {
                     elevation: 0,
                     scrolledUnderElevation: 3,
                     surfaceTintColor: context.theme.colorScheme.primary,
-                    leading: buildBackButton(context),
+                    leading: const BackButton(),
                     backgroundColor: _backgroundColor.value,
                     centerTitle: ss.settings.skin.value == Skins.iOS,
                     title: Text(

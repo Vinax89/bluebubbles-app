@@ -7,8 +7,8 @@ import 'package:bluebubbles/app/layouts/settings/pages/theming/advanced/advanced
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -66,7 +66,7 @@ class _AdvancedThemingPanelState extends OptimizedState<AdvancedThemingPanel> wi
             elevation: 0,
             scrolledUnderElevation: 3,
             surfaceTintColor: context.theme.colorScheme.primary,
-            leading: buildBackButton(context),
+            leading: const BackButton(),
             backgroundColor: headerColor,
             centerTitle: iOS,
             title: Text(

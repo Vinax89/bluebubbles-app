@@ -14,9 +14,9 @@ import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/string_utils.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' hide BackButton;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/window_effect.dart';
@@ -309,7 +309,7 @@ class ChatCreatorState extends OptimizedState<ChatCreator> {
             elevation: 0,
             scrolledUnderElevation: 3,
             surfaceTintColor: context.theme.colorScheme.primary,
-            leading: buildBackButton(context),
+            leading: const BackButton(),
             backgroundColor: Colors.transparent,
             centerTitle: ss.settings.skin.value == Skins.iOS,
             title: Text(

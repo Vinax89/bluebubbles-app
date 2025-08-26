@@ -6,7 +6,7 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/backend/settings/settings_service.dart';
 import 'package:bluebubbles/services/ui/navigator/navigator_service.dart';
 import 'package:bluebubbles/services/ui/theme/themes_service.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide BackButton;
 import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/window_effect.dart';
 import 'package:get/get.dart';
@@ -60,7 +60,7 @@ class _MessageOptionsOrderPanelState extends OptimizedState<MessageOptionsOrderP
                   elevation: 0,
                   scrolledUnderElevation: 3,
                   surfaceTintColor: context.theme.colorScheme.primary,
-                  leading: buildBackButton(context),
+                  leading: const BackButton(),
                   backgroundColor: _backgroundColor.value,
                   centerTitle: ss.settings.skin.value == Skins.iOS,
                   title: Text(
