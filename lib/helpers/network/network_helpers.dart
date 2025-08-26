@@ -2,6 +2,9 @@ import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:mobile_networks/mobile_networks.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:universal_io/io.dart';
 
 /// Take the passed [address] or serverAddress from Settings
@@ -60,4 +63,40 @@ Future<String> getDeviceName() async {
   }
 
   return deviceName;
+}
+
+/// Determines if the current connection is considered high speed.
+///
+/// A high-speed connection is defined as either a Wi-Fi network with a
+/// measurable link speed or a cellular connection of at least 4G/LTE.
+/// If the check fails or the network type cannot be determined, `false`
+/// is returned so the caller can fall back to compressed downloads.
+Future<bool> isHighSpeedConnection() async {
+  try {
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity == ConnectivityResult.wifi) {
+      try {
+        final speed = await NetworkInfo().getWifiSpeed();
+        if (speed == null) return true;
+        return speed >= 30; // Mbps
+      } catch (_) {
+        // If we fail to fetch Wi-Fi speed, assume Wi-Fi is fast enough
+        return true;
+      }
+    } else if (connectivity == ConnectivityResult.mobile) {
+      try {
+        final generation = await MobileNetworks().getMobileNetworkGeneration();
+        return generation == MobileNetworkGeneration.fourG ||
+            generation == MobileNetworkGeneration.fiveG ||
+            generation == MobileNetworkGeneration.lte;
+      } catch (_) {
+        // Unknown generation, treat as not high speed
+        return false;
+      }
+    }
+  } catch (ex, stack) {
+    Logger.error('Failed to determine connection type', error: ex, trace: stack);
+  }
+
+  return false;
 }
