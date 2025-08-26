@@ -21,6 +21,11 @@ CloudMessagingService fcm =
 class CloudMessagingService extends GetxService {
   String? token;
 
+  String _redactToken(String? value) {
+    if (value == null) return 'null';
+    return value.length <= 8 ? value : '${value.substring(0, 8)}...';
+  }
+
   /// So we can track the progress of the device registration process
   Completer<void>? completer;
 
@@ -47,7 +52,7 @@ class CloudMessagingService extends GetxService {
 
     // If we've already got a token, re-register with this token
     if (!isNullOrEmpty(token)) {
-      Logger.debug("Already authorized FCM device! Token: $token", tag: 'FCM-Auth');
+      Logger.debug("Already authorized FCM device! Token: ${_redactToken(token)}", tag: 'FCM-Auth');
       Logger.info('Registering device with server...', tag: 'FCM-Auth');
       String deviceName = await getDeviceName();
       await http.addFcmDevice(deviceName.trim(), token!.trim()).then((_) {
@@ -55,7 +60,7 @@ class CloudMessagingService extends GetxService {
         completer?.complete();
       }).catchError((ex) {
         completer?.completeError(ex);
-        throw Exception("Failed to add FCM device to the server! Token: $token, ${ex.toString()}");
+        throw Exception("Failed to add FCM device to the server! Token: ${_redactToken(token)}, ${ex.toString()}");
       });
       closeCompleter = true;
     }
@@ -135,7 +140,7 @@ class CloudMessagingService extends GetxService {
       completer?.complete();
     }).catchError((ex) {
       completer?.completeError(ex);
-      throw Exception("Failed to add FCM device to the server! Token: $token, ${ex.toString()}");
+      throw Exception("Failed to add FCM device to the server! Token: ${_redactToken(token)}, ${ex.toString()}");
     });
   }
 }
