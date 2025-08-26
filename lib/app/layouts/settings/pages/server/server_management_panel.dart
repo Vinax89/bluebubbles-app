@@ -569,6 +569,23 @@ class _ServerManagementPanelState extends CustomState<ServerManagementPanel, voi
                           socket.restartSocket();
                         }
                       }),
+                  const SettingsDivider(),
+                  Obx(() => SettingsSwitch(
+                        initialVal: ss.settings.trustSelfSignedCerts.value,
+                        title: "Trust Self-Signed Certificates",
+                        subtitle: "Allow connections to servers with self-signed SSL certificates",
+                        backgroundColor: tileColor,
+                        onChanged: (bool val) async {
+                          ss.settings.trustSelfSignedCerts.value = val;
+                          ss.saveSettings();
+                          socket.restartSocket();
+                        },
+                        leading: const SettingsLeadingIcon(
+                          iosIcon: CupertinoIcons.exclamationmark_shield,
+                          materialIcon: Icons.shield,
+                          containerColor: Colors.orange,
+                        ),
+                      )),
                   if (Platform.isAndroid)
                     const SettingsDivider(),
                   if (Platform.isAndroid)
