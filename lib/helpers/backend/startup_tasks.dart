@@ -103,6 +103,8 @@ class StartupTasks {
 
     dispose();
 
+    await ts.applySavedThemeFromServer();
+
     if (!kIsDesktop) {
       chats.init();
       socket;

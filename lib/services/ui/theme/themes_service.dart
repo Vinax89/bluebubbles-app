@@ -252,13 +252,40 @@ class ThemesService extends GetxService {
     return previous;
   }
 
-  Future<void> changeTheme(BuildContext context, {ThemeStruct? light, ThemeStruct? dark}) async {
+  Future<void> changeTheme(BuildContext context, {ThemeStruct? light, ThemeStruct? dark, bool persist = true}) async {
     light?.save();
     dark?.save();
     if (light != null) await ss.prefs.setString("selected-light", light.name);
     if (dark != null) await ss.prefs.setString("selected-dark", dark.name);
 
     _loadTheme(context);
+
+    if (persist) {
+      await ss.saveThemeToServer(light: light, dark: dark);
+    }
+  }
+
+  Future<void> applySavedThemeFromServer() async {
+    if (!ss.settings.finishedSetup.value) return;
+    try {
+      final response = await http.getTheme();
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        ThemeStruct? light;
+        ThemeStruct? dark;
+        for (final Map<String, dynamic> item in (response.data['data'] as List).cast<Map<String, dynamic>>()) {
+          if (item['name'] == 'selected-light') {
+            light = ThemeStruct.fromMap(item);
+            light.id = null;
+          } else if (item['name'] == 'selected-dark') {
+            dark = ThemeStruct.fromMap(item);
+            dark.id = null;
+          }
+        }
+        if (light != null || dark != null) {
+          await changeTheme(Get.context!, light: light, dark: dark, persist: false);
+        }
+      }
+    } catch (_) {}
   }
 
   Tuple2<ThemeData, ThemeData> _applyMonet(ThemeData light, ThemeData dark) {

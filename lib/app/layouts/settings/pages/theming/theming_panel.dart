@@ -309,7 +309,7 @@ class _ThemingPanelState extends CustomState<ThemingPanel, void, ThemingPanelCon
                       )),
                     if (kIsDesktop && Platform.isWindows)
                       const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
-                    if (!kIsWeb && !kIsDesktop && ts.monetPalette != null)
+                    if (!kIsWeb && !kIsDesktop && (fs.androidInfo?.version.sdkInt ?? 0) >= 31 && ts.monetPalette != null)
                       Obx(() {
                         if (iOS) {
                           return SettingsTile(
@@ -325,7 +325,7 @@ class _ThemingPanelState extends CustomState<ThemingPanel, void, ThemingPanelCon
                           return const SizedBox.shrink();
                         }
                       }),
-                    if (!kIsWeb && !kIsDesktop && ts.monetPalette != null)
+                    if (!kIsWeb && !kIsDesktop && (fs.androidInfo?.version.sdkInt ?? 0) >= 31 && ts.monetPalette != null)
                       GestureDetector(
                         onTap: () {
                           showMonetDialog(context);
@@ -355,7 +355,7 @@ class _ThemingPanelState extends CustomState<ThemingPanel, void, ThemingPanelCon
                           secondaryColor: headerColor,
                         ),
                       ),
-                    if (!kIsWeb && !kIsDesktop && ts.monetPalette != null)
+                    if (!kIsWeb && !kIsDesktop && (fs.androidInfo?.version.sdkInt ?? 0) >= 31 && ts.monetPalette != null)
                       const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
                     if (!kIsWeb && !kIsDesktop)
                       Obx(() => SettingsSwitch(
