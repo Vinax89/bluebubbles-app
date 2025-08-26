@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
 
 class CustomService extends GetxService {
   final count = 0.obs;
@@ -8,12 +9,12 @@ class CustomService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('CustomService initialized');
+    Logger.debug('CustomService initialized');
   }
 
   @override
   void onClose() {
-    print('CustomService disposed');
+    Logger.debug('CustomService disposed');
     super.onClose();
   }
 }
