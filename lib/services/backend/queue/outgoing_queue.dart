@@ -29,29 +29,31 @@ class OutgoingQueue extends Queue {
     }
   }
 
-  Future<T> handleSend<T>(Future<T> Function() process, Chat chat) {
-    var timer = Timer(const Duration(seconds: 5), () {
+  Future<T> handleSend<T>(Future<T> Function() process, Chat chat) async {
+    Timer? progressTimer = Timer(const Duration(seconds: 5), () {
       chat.sendProgress.value = .9;
     });
-    var t = process();
-    t.then((c) {
-      timer.cancel();
+
+    try {
+      final result = await process();
+      progressTimer.cancel();
       if (chat.sendProgress.value != 0) {
         chat.sendProgress.value = 1;
-        Timer(const Duration(milliseconds: 500), () {
-          chat.sendProgress.value = 0;
-        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        chat.sendProgress.value = 0;
       }
-    }).catchError((c) {
-      timer.cancel();
+      return result;
+    } catch (e) {
+      progressTimer.cancel();
       if (chat.sendProgress.value != 0) {
         chat.sendProgress.value = 1;
-        Timer(const Duration(milliseconds: 500), () {
-          chat.sendProgress.value = 0;
-        });
+        await Future.delayed(const Duration(milliseconds: 500));
+        chat.sendProgress.value = 0;
       }
-    });
-    return t;
+      rethrow;
+    } finally {
+      progressTimer.cancel();
+    }
   }
 
   @override
