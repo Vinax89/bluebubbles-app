@@ -32,7 +32,6 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
 import 'package:google_ml_kit/google_ml_kit.dart' hide Message;
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:path/path.dart' show join;
 import 'package:path/path.dart' as p;
@@ -48,7 +47,6 @@ import 'package:universal_io/io.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
-bool isAuthing = false;
 final systemTray = st.SystemTray();
 
 @pragma('vm:entry-point')
@@ -334,15 +332,11 @@ class Main extends StatelessWidget {
                     blurr: 5,
                     opacity: 0,
                     lockedBuilder: (context, controller) {
-                      final localAuth = LocalAuthentication();
-                      if (!isAuthing) {
-                        isAuthing = true;
-                        localAuth
-                            .authenticate(
-                                localizedReason: 'Please authenticate to unlock BlueBubbles',
-                                options: const AuthenticationOptions(stickyAuth: true))
+                      final auth = ac();
+                      if (!auth.isAuthing.value) {
+                        auth
+                            .authenticate()
                             .then((result) {
-                          isAuthing = false;
                           if (result) {
                             SecureApplicationProvider.of(context, listen: false)!.authSuccess(unlock: true);
                             if (kIsDesktop) {
@@ -378,10 +372,7 @@ class Main extends StatelessWidget {
                                         height: 60,
                                         child: Icon(Icons.lock_open, color: context.theme.colorScheme.onPrimary)),
                                     onTap: () async {
-                                      final localAuth = LocalAuthentication();
-                                      bool didAuthenticate = await localAuth.authenticate(
-                                          localizedReason: 'Please authenticate to unlock BlueBubbles',
-                                          options: const AuthenticationOptions(stickyAuth: true));
+                                      bool didAuthenticate = await ac().authenticate();
                                       if (didAuthenticate) {
                                         controller!.authSuccess(unlock: true);
                                         if (kIsDesktop) {
