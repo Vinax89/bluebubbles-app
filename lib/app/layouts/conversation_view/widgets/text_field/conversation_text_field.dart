@@ -10,7 +10,7 @@ import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/send_a
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/text_field/picked_attachments_holder.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/text_field/reply_holder.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/text_field/text_field_suffix.dart';
-import 'package:bluebubbles/app/layouts/conversation_view/widgets/text_field/voice_message_recorder.dart';
+import 'package:bluebubbles/app/components/voice/voice_recorder.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
@@ -745,7 +745,7 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
                                                     ),
                                                   );
                                                 })
-                                            : VoiceMessageRecorder(
+                                            : VoiceRecorder(
                                               recorderController: recorderController,
                                               textFieldSize: textFieldSize,
                                               iOS: iOS,

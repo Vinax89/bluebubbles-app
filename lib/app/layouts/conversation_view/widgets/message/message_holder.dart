@@ -1,5 +1,7 @@
 import 'package:bluebubbles/app/components/custom/custom_bouncing_scroll_physics.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/attachment/attachment_holder.dart';
+import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/attachment/audio_player.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/attachment/sticker_holder.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/chat_event/chat_event.dart';
 import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/interactive/interactive_holder.dart';
@@ -495,10 +497,7 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
                                                                       && (e.text != null || e.subject != null) ? TextBubble(
                                                                     parentController: controller,
                                                                     message: e,
-                                                                  ) : e.attachments.isNotEmpty ? AttachmentHolder(
-                                                                    parentController: controller,
-                                                                    message: e,
-                                                                  ) : const SizedBox.shrink(),
+                                                                  ) : e.attachments.isNotEmpty ? _buildAttachment(e) : const SizedBox.shrink(),
                                                                   if (message.isFromMe!)
                                                                     Obx(() {
                                                                       final editStuff = widget.cvController.editing.firstWhereOrNull((e2) => e2.item1.guid == message.guid! && e2.item2.part == e.part);
@@ -834,4 +833,26 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
       ),
     );
   }
+
+
+  Widget _buildAttachment(MessagePart e) {
+    final attachment = e.attachments.first;
+    if (attachment != null && attachment.mimeStart == 'audio' && attachment.bytes != null) {
+      final file = PlatformFile(
+        name: attachment.transferName ?? 'audio.m4a',
+        bytes: attachment.bytes,
+        path: attachment.path,
+        size: attachment.bytes!.length,
+      );
+      return AudioPlayer(
+        attachment: attachment,
+        message: message,
+        part: e.part,
+        file: file,
+        controller: widget.cvController,
+      );
+    }
+    return AttachmentHolder(parentController: controller, message: e);
+  }
+
 }
