@@ -53,7 +53,7 @@ dependencies:
   easy_debounce: ^2.0.3
   emojis: ^0.9.9
   emoji_picker_flutter: ^3.0.0
-  encrypt: ^5.0.3
+  pointycastle: ^3.7.3
   exif: ^3.3.0
   faker: ^2.1.0
   fast_contacts: ^4.0.0  # mobile only

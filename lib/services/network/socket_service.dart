@@ -148,7 +148,7 @@ class SocketService extends GetxService {
 
     socket.emitWithAck(event, message, ack: (response) {
       if (response['encrypted'] == true) {
-        response['data'] = jsonDecode(decryptAESCryptoJS(response['data'], password));
+        response['data'] = jsonDecode(decryptAES(response['data'], password));
       }
 
       if (!completer.isCompleted) {
