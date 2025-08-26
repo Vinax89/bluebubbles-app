@@ -111,7 +111,14 @@ class _FindMyPageState extends OptimizedState<FindMyPage> with SingleTickerProvi
           location = loc;
           buildLocationMarker(location!);
           if (!kIsDesktop) {
-            locationSub = Geolocator.getPositionStream().listen((event) {
+            final locationSettings = LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: 100,
+            );
+            locationSub?.cancel();
+            locationSub = Geolocator.getPositionStream(
+              locationSettings: locationSettings,
+            ).listen((event) {
               setState(() {
                 buildLocationMarker(event);
               });
