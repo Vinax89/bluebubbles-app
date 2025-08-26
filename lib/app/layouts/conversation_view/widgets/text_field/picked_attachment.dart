@@ -150,6 +150,7 @@ class _PickedAttachmentState extends OptimizedState<PickedAttachment> with Autom
                             onPressed: () {
                               if (widget.controller != null) {
                                 widget.controller!.pickedAttachments.removeWhere((e) => e.path == widget.data.path);
+                                widget.controller!.pickedStickers.removeWhere((e) => e.path == widget.data.path);
                                 widget.controller!.chat.textFieldAttachments.removeWhere((e) => e == widget.data.path);
                                 widget.controller!.chat.save(updateTextFieldAttachments: true);
                               } else {
@@ -187,6 +188,7 @@ class _PickedAttachmentState extends OptimizedState<PickedAttachment> with Autom
                 onPressed: () {
                   if (widget.controller != null) {
                     widget.controller!.pickedAttachments.removeWhere((e) => e.path == widget.data.path);
+                    widget.controller!.pickedStickers.removeWhere((e) => e.path == widget.data.path);
                     widget.controller!.chat.textFieldAttachments.removeWhere((e) => e == widget.data.path);
                     widget.controller!.chat.save(updateTextFieldAttachments: true);
                   } else {

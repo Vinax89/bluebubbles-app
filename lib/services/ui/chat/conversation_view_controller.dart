@@ -62,6 +62,7 @@ class ConversationViewController extends StatefulController with GetSingleTicker
   RxBool showEmojiPicker = false.obs;
   final GlobalKey textFieldKey = GlobalKey();
   final RxList<PlatformFile> pickedAttachments = <PlatformFile>[].obs;
+  final RxList<PlatformFile> pickedStickers = <PlatformFile>[].obs;
   final focusNode = FocusNode();
   final subjectFocusNode = FocusNode();
   late final textController = MentionTextEditingController(focusNode: focusNode);

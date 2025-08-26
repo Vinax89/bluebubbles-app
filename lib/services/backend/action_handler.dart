@@ -267,6 +267,18 @@ class ActionHandler extends GetxService {
     await c.addMessage(m);
   }
 
+  Future<void> prepSticker(Chat c, Message m) async {
+    final attachment = m.attachments.first!;
+    final progress = Tuple2(attachment.guid!, 0.0.obs);
+    attachmentProgress.add(progress);
+    if (!kIsWeb) {
+      String pathName = "${fs.appDocDir.path}/attachments/${attachment.guid}/${attachment.transferName}";
+      final file = await File(pathName).create(recursive: true);
+      await file.writeAsBytes(attachment.bytes!);
+    }
+    await c.addMessage(m);
+  }
+
   Future<void> sendAttachment(Chat c, Message m, bool isAudioMessage) async {
     if (m.attachments.isEmpty || m.attachments.firstOrNull?.bytes == null) return;
     final attachment = m.attachments.first!;
@@ -317,6 +329,61 @@ class ActionHandler extends GetxService {
     }).catchError((error, stack) async {
       latestCancelToken = null;
       Logger.error('Failed to send message!', error: error, trace: stack);
+
+      final tempGuid = m.guid;
+      m = handleSendError(error, m);
+
+      if (!ls.isAlive || !(cm.getChatController(c.guid)?.isAlive ?? false)) {
+        await notif.createFailedToSend(c);
+      }
+      await Message.replaceMessage(tempGuid, m);
+      attachmentProgress.removeWhere((e) => e.item1 == m.guid || e.item2 >= 1);
+      completer.completeError(error);
+    });
+
+    return completer.future;
+  }
+
+  Future<void> sendSticker(Chat c, Message m) async {
+    if (m.attachments.isEmpty || m.attachments.firstOrNull?.bytes == null) return;
+    final attachment = m.attachments.first!;
+    final progress = attachmentProgress.firstWhere((e) => e.item1 == attachment.guid);
+    final completer = Completer<void>();
+    latestCancelToken = CancelToken();
+    http.sendSticker(
+      c.guid,
+      attachment.guid!,
+      PlatformFile(name: attachment.transferName!, bytes: attachment.bytes, path: kIsWeb ? null : attachment.path, size: attachment.totalBytes ?? 0),
+      m.associatedMessageGuid!,
+      partIndex: m.associatedMessagePart,
+      onSendProgress: (count, total) => progress.item2.value = count / attachment.bytes!.length,
+      cancelToken: latestCancelToken,
+    ).then((response) async {
+      latestCancelToken = null;
+      final newMessage = Message.fromMap(response.data['data']);
+
+      for (Attachment? a in newMessage.attachments) {
+        if (a == null) continue;
+
+        matchAttachmentWithExisting(c, m.guid!, a, existing: attachment)
+            .then((_) {
+          ms(c.guid).updateMessage(newMessage);
+        }).catchError((e, stack) {
+          Logger.warn("Failed to replace attachment ${a.guid}!", error: e, tag: "AttachmentStatus");
+        });
+      }
+
+      try {
+        await matchMessageWithExisting(c, m.guid!, newMessage, existing: m);
+      } catch (e) {
+        Logger.warn("Failed to find message match for ${m.guid} -> ${newMessage.guid}!", error: e, tag: "MessageStatus");
+      }
+      attachmentProgress.removeWhere((e) => e.item1 == m.guid || e.item2 >= 1);
+
+      completer.complete();
+    }).catchError((error, stack) async {
+      latestCancelToken = null;
+      Logger.error('Failed to send sticker!', error: error, trace: stack);
 
       final tempGuid = m.guid;
       m = handleSendError(error, m);
