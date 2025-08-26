@@ -2,7 +2,7 @@ import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:get/get.dart';
 
 class CustomService extends GetxService {
-  final count = 0.obs;
+  final RxInt count = 0.obs;
 
   void increment() => count.value++;
 
