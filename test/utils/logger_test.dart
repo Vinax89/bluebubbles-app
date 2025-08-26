@@ -1,32 +1,66 @@
 import 'dart:io';
-import 'package:path/path.dart';
+
+import 'package:archive/archive_io.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bluebubbles/utils/logger/logger.dart';
-import 'package:bluebubbles/services/backend/filesystem/filesystem_service.dart';
+import 'package:path/path.dart';
 import 'package:get/get.dart';
 
+import 'package:bluebubbles/services/backend/filesystem/filesystem_service.dart';
+import 'package:bluebubbles/utils/logger/logger.dart';
+
 void main() {
-  setUp(() {
+  late Directory tempDir;
+  late Directory logDir;
+
+  setUp(() async {
     Get.reset();
     Get.put(FilesystemService());
+    initLogger();
+    tempDir = await Directory.systemTemp.createTemp('logger_test');
+    fs.appDocDir = tempDir;
+    logDir = Directory(Logger.logDir)..createSync(recursive: true);
   });
 
-  test('getLogs includes last log entry', () async {
-    final tempDir = await Directory.systemTemp.createTemp();
-    fs.appDocDir = tempDir;
-    final logsDir = Directory(join(tempDir.path, 'logs'))..createSync(recursive: true);
-    final logFile = File(join(logsDir.path, 'bluebubbles-latest.log'));
-    logFile.writeAsStringSync(
-      '2024-01-01 First log\n'
-      'Continuation\n'
-      '2024-01-02 Second log',
-    );
+  tearDown(() {
+    if (tempDir.existsSync()) {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
 
-    final logger = BaseLogger();
-    final logs = await logger.getLogs();
-    expect(logs.length, 2);
-    expect(logs.last.contains('Second log'), isTrue);
+  test('getLogs returns expected lines', () async {
+    final logFile = File(join(logDir.path, Logger.latestLogName));
+    await logFile.writeAsString([
+      '2024-01-01 [INFO] first',
+      'continuation line',
+      '2024-01-02 [ERROR] second'
+    ].join('\n'));
 
-    tempDir.deleteSync(recursive: true);
+    final logs = await Logger.getLogs();
+    expect(logs, [
+      '2024-01-01 [INFO] first\ncontinuation line',
+      '2024-01-02 [ERROR] second'
+    ]);
+  });
+
+  test('compressLogs creates a ZIP', () async {
+    final logFile = File(join(logDir.path, Logger.latestLogName));
+    await logFile.writeAsString('2024-01-01 [INFO] log');
+
+    final zipPath = Logger.compressLogs();
+    final zipFile = File(zipPath);
+    expect(zipFile.existsSync(), isTrue);
+
+    final archive = ZipDecoder().decodeBytes(zipFile.readAsBytesSync());
+    expect(archive.files.any((f) => f.name.endsWith('.log')), isTrue);
+  });
+
+  test('clearLogs removes existing logs', () {
+    final logFile = File(join(logDir.path, Logger.latestLogName));
+    logFile.writeAsStringSync('test log');
+    expect(logDir.listSync().isNotEmpty, isTrue);
+
+    Logger.clearLogs();
+    expect(logDir.listSync(), isEmpty);
   });
 }
+
