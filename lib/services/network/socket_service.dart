@@ -56,7 +56,11 @@ class SocketService extends GetxService {
 
   void startSocket() {
     OptionBuilder options = OptionBuilder()
-        .setQuery({"guid": password})
+        .setQuery({
+          "guid": password,
+          "chaosMode": ss.settings.chaosMode.value.toString(),
+          "stressMode": ss.settings.stressMode.value.toString(),
+        })
         .setTransports(['websocket', 'polling'])
         .setExtraHeaders(http.headers)
         // Disable so that we can create the listeners first

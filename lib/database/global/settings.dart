@@ -153,6 +153,8 @@ class Settings {
 
   // Troubleshooting settings
   final Rx<Level> logLevel = Level.info.obs;
+  final RxBool chaosMode = false.obs;
+  final RxBool stressMode = false.obs;
 
   // Notification actions
   final RxList<int> selectedActionIndices = Platform.isWindows ? [0, 1, 2, 3, 4].obs : [0, 1, 2].obs;
@@ -363,6 +365,8 @@ class Settings {
       'windowEffectCustomOpacityDark': windowEffectCustomOpacityDark.value,
       'useWindowsAccent': useWindowsAccent.value,
       'logLevel': logLevel.value.index,
+      'chaosMode': chaosMode.value,
+      'stressMode': stressMode.value,
       'hideNamesForReactions': hideNamesForReactions.value,
       'replaceEmoticonsWithEmoji': replaceEmoticonsWithEmoji.value,
       'lastReviewRequestTimestamp': lastReviewRequestTimestamp.value,
@@ -506,6 +510,8 @@ class Settings {
     ss.settings.useWindowsAccent.value = map['useWindowsAccent'] ?? false;
     ss.settings.firstFcmRegisterDate.value = map['firstFcmRegisterDate'] ?? 0;
     ss.settings.logLevel.value = map['logLevel'] != null ? Level.values[map['logLevel']] : Level.info;
+    ss.settings.chaosMode.value = map['chaosMode'] ?? false;
+    ss.settings.stressMode.value = map['stressMode'] ?? false;
     ss.settings.hideNamesForReactions.value = map['hideNamesForReactions'] ?? false;
     ss.settings.replaceEmoticonsWithEmoji.value = map['replaceEmoticonsWithEmoji'] ?? false;
     ss.settings.save();
@@ -645,6 +651,8 @@ class Settings {
     s.useWindowsAccent.value = map['useWindowsAccent'] ?? false;
     s.firstFcmRegisterDate.value = map['firstFcmRegisterDate'] ?? 0;
     s.logLevel.value = map['logLevel'] != null ? Level.values[map['logLevel']] : Level.info;
+    s.chaosMode.value = map['chaosMode'] ?? false;
+    s.stressMode.value = map['stressMode'] ?? false;
     s.hideNamesForReactions.value = map['hideNamesForReactions'] ?? false;
     s.replaceEmoticonsWithEmoji.value = map['replaceEmoticonsWithEmoji'] ?? false;
     s.lastReviewRequestTimestamp.value = map['lastReviewRequestTimestamp'] ?? 0;
