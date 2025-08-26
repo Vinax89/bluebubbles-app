@@ -1,0 +1,38 @@
+name: Flutter Tests (fixed)
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter & Dart versions
+        run: |
+          flutter --version
+          dart --version
+
+      - name: Clean pub cache (avoid stale plugin metadata)
+        run: |
+          flutter pub cache clean || true
+
+      - name: Resolve dependencies (respect dependency_overrides)
+        run: |
+          flutter pub upgrade --major-versions
+          flutter pub get
+          flutter pub deps --style=compact | sed -n '1,120p'
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run integration-tagged tests
+        run: flutter test --tags integration --dart-define=ENABLE_FLOOD_TEST=true
