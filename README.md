@@ -60,6 +60,25 @@ All Server builds can be found in [here](https://github.com/BlueBubblesApp/BlueB
 
 After downloading both, follow our tutorial [here](https://bluebubbles.app/install/).
 
+## Development Setup
+
+1. Install [Flutter](https://docs.flutter.dev/get-started/install) and set up your development environment.
+2. Clone this repository:
+   ```bash
+   git clone https://github.com/BlueBubblesApp/bluebubbles-app.git
+   cd bluebubbles-app
+   ```
+3. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+4. Launch the app:
+   ```bash
+   flutter run
+   ```
+
+> **Note**: A macOS server is required to relay iMessage traffic. See the [configuration documentation](https://docs.bluebubbles.app/server) for detailed setup instructions.
+
 ## Contributing
 
 Please check out our contribution guide here: [Contribution Guide](https://docs.bluebubbles.app/client/build-yourself-contribution-guide)
