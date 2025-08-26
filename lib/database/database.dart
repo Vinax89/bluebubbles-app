@@ -144,75 +144,83 @@ class Database {
   }
 
   static void _performDatabaseMigrations({int? versionOverride}) {
-    int version = versionOverride ?? ss.prefs.getInt('dbVersion') ?? (ss.settings.finishedSetup.value ? 1 : Database.version);
-    if (version <= Database.version) return;
+    int version =
+        versionOverride ?? ss.prefs.getInt('dbVersion') ?? (ss.settings.finishedSetup.value ? 1 : Database.version);
+    if (version >= Database.version) return;
 
     final Stopwatch s = Stopwatch();
     s.start();
 
-    int nextVersion = version;
-    Logger.debug("Performing database migration from version $version to ${Database.version}", tag: "DB-Migration");
-    switch (Database.version) {
-      // Version 2 changed handleId to match the server side ROWID, rather than client side ROWID
-      case 2:
-        Logger.info("Fetching all messages and handles...", tag: "DB-Migration");
-        final messages = Database.messages.getAll();
-        if (messages.isNotEmpty) {
-          final handles = Database.handles.getAll();
-          Logger.info("Replacing handleIds for messages...", tag: "DB-Migration");
-          for (Message m in messages) {
-            if (m.isFromMe! || m.handleId == 0 || m.handleId == null) continue;
-            m.handleId = handles.firstWhereOrNull((e) => e.id == m.handleId)?.originalROWID ?? m.handleId;
+    Logger.debug(
+      "Performing database migration from version $version to ${Database.version}",
+      tag: "DB-Migration",
+    );
+
+    while (version < Database.version) {
+      final int nextVersion = version + 1;
+      switch (nextVersion) {
+        // Version 2 changed handleId to match the server side ROWID, rather than client side ROWID
+        case 2:
+          Logger.info("Fetching all messages and handles...", tag: "DB-Migration");
+          final messages = Database.messages.getAll();
+          if (messages.isNotEmpty) {
+            final handles = Database.handles.getAll();
+            Logger.info("Replacing handleIds for messages...", tag: "DB-Migration");
+            for (Message m in messages) {
+              if (m.isFromMe! || m.handleId == 0 || m.handleId == null) continue;
+              m.handleId = handles.firstWhereOrNull((e) => e.id == m.handleId)?.originalROWID ?? m.handleId;
+            }
+            Logger.info("Final save...", tag: "DB-Migration");
+            Database.messages.putMany(messages);
           }
-          Logger.info("Final save...", tag: "DB-Migration");
-          Database.messages.putMany(messages);
-        }
-
-        nextVersion = 2;
-      // Version 3 modifies chat typing indicators and read receipts values to follow global setting initially
-      case 3:
-        final chats = Database.chats.getAll();
-        final papi = ss.settings.enablePrivateAPI.value;
-        final typeGlobal = ss.settings.privateSendTypingIndicators.value;
-        final readGlobal = ss.settings.privateMarkChatAsRead.value;
-        for (Chat c in chats) {
-          if (papi && readGlobal && !(c.autoSendReadReceipts ?? true)) {
-            // dont do anything
-          } else {
-            c.autoSendReadReceipts = null;
+          break;
+        // Version 3 modifies chat typing indicators and read receipts values to follow global setting initially
+        case 3:
+          final chats = Database.chats.getAll();
+          final papi = ss.settings.enablePrivateAPI.value;
+          final typeGlobal = ss.settings.privateSendTypingIndicators.value;
+          final readGlobal = ss.settings.privateMarkChatAsRead.value;
+          for (Chat c in chats) {
+            if (papi && readGlobal && !(c.autoSendReadReceipts ?? true)) {
+              // dont do anything
+            } else {
+              c.autoSendReadReceipts = null;
+            }
+            if (papi && typeGlobal && !(c.autoSendTypingIndicators ?? true)) {
+              // dont do anything
+            } else {
+              c.autoSendTypingIndicators = null;
+            }
           }
-          if (papi && typeGlobal && !(c.autoSendTypingIndicators ?? true)) {
-            // dont do anything
-          } else {
-            c.autoSendTypingIndicators = null;
+
+          Database.chats.putMany(chats);
+          break;
+        // Version 4 saves FCM Data to the shared preferences for use in Tasker integration
+        case 4:
+          ss.getFcmData();
+          ss.fcmData.save();
+          break;
+        case 5:
+          // Find the Bright White theme and reset it back to the default (new colors)
+          final brightWhite =
+              Database.themes.query(ThemeStruct_.name.equals("Bright White")).build().findFirst();
+          if (brightWhite != null) {
+            brightWhite.data = ts.whiteLightTheme;
+            Database.themes.put(brightWhite, mode: PutMode.update);
           }
-        }
 
-        Database.chats.putMany(chats);
-        nextVersion = 3;
-      // Version 4 saves FCM Data to the shared preferences for use in Tasker integration
-      case 4:
-        ss.getFcmData();
-        ss.fcmData.save();
-        nextVersion = 4;
-      case 5:
-        // Find the Bright White theme and reset it back to the default (new colors)
-        final brightWhite = Database.themes.query(ThemeStruct_.name.equals("Bright White")).build().findFirst();
-        if (brightWhite != null) {
-          brightWhite.data = ts.whiteLightTheme;
-          Database.themes.put(brightWhite, mode: PutMode.update);
-        }
-
-        // Find the OLED theme and reset it back to the default (new colors)
-        final oled = Database.themes.query(ThemeStruct_.name.equals("OLED Dark")).build().findFirst();
-        if (oled != null) {
-          oled.data = ts.oledDarkTheme;
-          Database.themes.put(oled, mode: PutMode.update);
-        }
-    }
-
-    if (nextVersion != version) {
-      _performDatabaseMigrations(versionOverride: nextVersion);
+          // Find the OLED theme and reset it back to the default (new colors)
+          final oled = Database.themes.query(ThemeStruct_.name.equals("OLED Dark")).build().findFirst();
+          if (oled != null) {
+            oled.data = ts.oledDarkTheme;
+            Database.themes.put(oled, mode: PutMode.update);
+          }
+          break;
+        default:
+          Logger.warn("No database migration found for version $nextVersion", tag: "DB-Migration");
+          break;
+      }
+      version = nextVersion;
     }
 
     s.stop();
