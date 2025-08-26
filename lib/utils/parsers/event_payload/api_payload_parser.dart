@@ -1,134 +1,94 @@
-/*
-import 'package:bluebubbles/utils/parsers/event_payload/api_payload.dart';
-import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/database/global/server_payload.dart';
+import 'models.dart';
 
+/// Parser to transform raw server payloads into strongly typed models.
 class ApiPayloadParser {
+  ApiPayloadParser(this.payload);
 
-  ApiPayload payload;
+  final ServerPayload payload;
 
-  late Map<String, Function> enrichmentRefs = {};
+  /// Parses the payload into typed models based on the [PayloadType].
+  Future<Object?> parse() async {
+    if (payload.isLegacy) return payload.originalJson;
 
-  ApiPayloadParser(this.payload) {
-    enrichmentRefs = {
-      'messages': enrichMessages,
-      'chats': enrichChats,
-      'attachments': enrichAttachments,
-      'participants': enrichHandles,
-    };
-  }
-
-  Future<dynamic> parse() async {
-    if (payload.isLegacy) {
-      return await parseLegacyPayload();
-    } else {
-      return await parsePayload();
+    switch (payload.type) {
+      case PayloadType.ATTACHMENT:
+        return parseAttachment();
+      case PayloadType.CHAT:
+        return parseChat();
+      case PayloadType.HANDLE:
+        return parseHandle();
+      default:
+        return payload.data;
     }
   }
 
-  Future<dynamic> parseLegacyPayload() async {
-    // If the payload is legacy, we just should return the payload itself.
-    // This is because the payload is already in a readable format
-    return payload.payload;
-  }
+  /// Parse attachment payloads and return [AttachmentPayload] objects.
+  Future<List<AttachmentPayload>> parseAttachment() async {
+    final List<dynamic> dataList =
+        payload.isList ? List<dynamic>.from(payload.data) : [payload.data];
+    if (dataList.isEmpty) return <AttachmentPayload>[];
 
-  Future<dynamic> parsePayload() async {
-    // If the data is null or a string, return the raw payload
-    if (payload.data == null || payload.dataIsString) return payload.payload;
-
-    if ([PayloadType.NEW_MESAGE, PayloadType.UPDATED_MESSAGE, PayloadType.MESSAGE].contains(payload.type)) {
-      return await parseMessage(payload);
-    } else if (payload.type == PayloadType.CHAT) {
-      return await parseChat(payload);
-    } else if (payload.type == PayloadType.ATTACHMENT) {
-      return await parseAttachment(payload);
-    } else if (payload.type == PayloadType.HANDLE) {
-      return await parseHandle(payload);
-    } else {
-      return null;
-    }
-  }
-
-  Future<dynamic> parseMessage(ApiPayload payload) async {
-    List<dynamic> data = payload.dataIsList ? payload.data : [payload.data];
-    bool needsEnrichment = data.isNotEmpty && data.every((i) => i is String);
-
+    bool needsEnrichment = dataList.every((element) => element is String);
+    List<dynamic> enriched = dataList;
     if (needsEnrichment) {
-      payload.data = await enrichEntity('messages', payload);
+      enriched = await enrichAttachments(dataList.cast<String>());
     }
 
-    return payload;
+    return enriched
+        .map((e) => e is AttachmentPayload
+            ? e
+            : AttachmentPayload.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
-  Future<List<dynamic>> enrichEntity(String entity, ApiPayload payload) async {
-    List<dynamic> output = payload.dataIsList ? payload.data : [payload.data];
-    bool needsEnrichment = output.isNotEmpty && output.every((i) => i is String);
-    
-    if (!enrichmentRefs.containsKey(entity)) {
-      throw Exception('Invalid entity type: $entity');
-    }
+  /// Parse chat payloads and return [ChatPayload] objects.
+  Future<List<ChatPayload>> parseChat() async {
+    final List<dynamic> dataList =
+        payload.isList ? List<dynamic>.from(payload.data) : [payload.data];
+    if (dataList.isEmpty) return <ChatPayload>[];
 
+    bool needsEnrichment = dataList.every((element) => element is String);
+    List<dynamic> enriched = dataList;
     if (needsEnrichment) {
-      output = await enrichmentRefs[entity]!(output as List<String>);
+      enriched = await enrichChats(dataList.cast<String>());
     }
 
-    return payload.dataIsList ? output : (output.isNotEmpty ? output.first : null);
+    return enriched
+        .map((e) => e is ChatPayload
+            ? e
+            : ChatPayload.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
-  Future<List<dynamic>> enrichMessages(List<String> guids) async {
-    // Fetch the corresponding messages from the API.
-    // For messages, we need the latest n' greatest.
-    List<dynamic> messages = await MessagesService.getMessages(
-        limit: guids.length,
-        withChats: true,
-        withHandles: true,
-        withAttachments: true,
-        withChatParticipants: true,
-        where: [
-          {
-            'statement': 'message.guid IN (:...guids)',
-            'args': {'guids': guids}
-          }
-        ]
-    );
+  /// Parse handle payloads and return [HandlePayload] objects.
+  Future<List<HandlePayload>> parseHandle() async {
+    final List<dynamic> dataList =
+        payload.isList ? List<dynamic>.from(payload.data) : [payload.data];
+    if (dataList.isEmpty) return <HandlePayload>[];
 
-    // Create a map of the messages where the GUID is the key
-    Map<String, dynamic> messagesMap = {};
-    for (var message in messages) {
-      messagesMap[message['guid']] = message;
+    bool needsEnrichment = dataList.every((element) => element is String);
+    List<dynamic> enriched = dataList;
+    if (needsEnrichment) {
+      enriched = await enrichHandles(dataList.cast<String>());
     }
 
-    // Return a list of message dictionaries, in place of the GUIDs
-    return guids.where(
-      (guid) => messagesMap.containsKey(guid)).map((guid) => messagesMap[guid]).toList();
+    return enriched
+        .map((e) => e is HandlePayload
+            ? e
+            : HandlePayload.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
   }
 
-  dynamic parseAttachment(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
+  /// Attachment enrichment hook. Can be overridden in tests.
+  Future<List<AttachmentPayload>> enrichAttachments(List<String> guids) async =>
+      <AttachmentPayload>[];
 
-  }
+  /// Chat enrichment hook. Can be overridden in tests.
+  Future<List<ChatPayload>> enrichChats(List<String> guids) async =>
+      <ChatPayload>[];
 
-  Future<List<dynamic>> enrichAttachments(List<String> guids) async {
-    // TODO: Implement attachment query endpoint
-    return [];
-  }
-
-  dynamic parseChat(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
-
-  }
-
-  Future<List<dynamic>> enrichChats(List<String> guids) async {
-    // TODO: Implement chat query endpoint
-    return [];
-  }
-
-  dynamic parseHandle(dynamic payload) {
-    bool needsEnrichment = payload.dataIsList && payload.data.length > 0 && payload.data[0] is String;
-
-  }
-
-  Future<List<dynamic>> enrichHandles(List<String> addresses) async {
-    // TODO: Implement handle query endpoint
-    return [];
-  }
-}*/
+  /// Handle enrichment hook. Can be overridden in tests.
+  Future<List<HandlePayload>> enrichHandles(List<String> addresses) async =>
+      <HandlePayload>[];
+}
