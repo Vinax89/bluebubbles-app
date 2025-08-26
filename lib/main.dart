@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:isolate';
 
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:bluebubbles/app/components/custom/custom_error_box.dart';
-import 'package:bluebubbles/app/init.dart';
 import 'package:bluebubbles/app/system_tray.dart';
 import 'package:bluebubbles/helpers/backend/startup_tasks.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
@@ -17,7 +17,10 @@ import 'package:bluebubbles/app/wrappers/titlebar_wrapper.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
-import 'package:collection/collection.dart';
+import 'package:bluebubbles/services/network/http_overrides.dart';
+import 'package:bluebubbles/startup/platform.dart';
+import 'package:bluebubbles/startup/services.dart';
+import 'package:bluebubbles/startup/theme.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -37,6 +40,31 @@ import 'package:window_manager/window_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 
 bool isAuthing = false;
+
+Future<void> initializeApp(bool bubble, List<String> arguments) async {
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    HttpOverrides.global = BadCertOverride();
+    FlutterError.onError = (details) {
+      Logger.error("Rendering Error: ${details.exceptionAsString()}",
+          error: details.exception, trace: details.stack);
+    };
+
+    Exception? exception;
+    exception ??= await initServices(bubble, arguments);
+    exception ??= await initPlatform(arguments);
+
+    if (exception == null) {
+      final themes = loadThemes();
+      runApp(Main(lightTheme: themes.light, darkTheme: themes.dark));
+    } else {
+      runApp(FailureToStart(e: exception));
+      throw exception;
+    }
+  }, (error, stackTrace) {
+    Logger.error("Unhandled Exception", trace: stackTrace, error: error);
+  });
+}
 
 @pragma('vm:entry-point')
 Future<void> main(List<String> arguments) async {
