@@ -69,162 +69,194 @@ class BulkSaveNewMessages extends AsyncTask<List<dynamic>, List<Message>> {
   @override
   FutureOr<List<Message>> run() {
     return Database.runInTransaction(TxMode.write, () {
-      // NOTE: This assumes that handles and chats will already be created and in the database
-      // 0. Create map for the messages and attachments to save
-      // 1. Check for existing attachments and save new ones
-      // 2. Fetch all inserted/existing attachments based on input
-      // 3. Create map of inserted/existing attachments
-      // 4. Check for existing messages & create list of new messages to save
-      // 5. Fetch all handles and map the old handle ROWIDs from each message to the new ones based on the original ROWID
-      // 6. Relate the attachments to the messages
-      // 7. Save all messages (and handle/attachment relationships)
-      // 8. Get the inserted messages
-      // 9. Check inserted messages for associated message GUIDs & update hasReactions flag
-      // 10. Save the updated associated messages
-      // 11. Update the associated chat's last message
-
-      /// Takes the list of messages from [params] and saves it
-      /// to the objectbox Database.
       Chat inputChat = params[0];
       List<Message> inputMessages = params[1];
-      List<String> inputMessageGuids = inputMessages.map((element) => element.guid!).toList();
+      List<String> inputMessageGuids =
+          inputMessages.map((element) => element.guid!).toList();
 
-      // 0. Create map for the messages and attachments to save
-      Map<String, Attachment> attachmentsToSave = {};
       Map<String, List<String>> messageAttachments = {};
-      for (final msg in inputMessages) {
-        for (final a in msg.attachments) {
-          if (!attachmentsToSave.containsKey(a!.guid)) {
-            attachmentsToSave[a.guid!] = a;
-          }
+      Map<String, Attachment> attachmentMap =
+          _prepareAttachments(inputMessages, messageAttachments);
 
-          if (!messageAttachments.containsKey(a.guid)) {
-            messageAttachments[msg.guid!] = [];
-          }
-
-          if (!messageAttachments[msg.guid]!.contains(a.guid)) {
-            messageAttachments[msg.guid]?.add(a.guid!);
-          }
-        }
-      }
-
-      // 1. Check for existing attachments and save new ones
-      Map<String, Attachment> attachmentMap = {};
-      if (attachmentsToSave.isNotEmpty) {
-        List<String> inputAttachmentGuids = attachmentsToSave.values.map((e) => e.guid).whereNotNull().toList();
-        QueryBuilder<Attachment> attachmentQuery = Database.attachments.query(Attachment_.guid.oneOf(inputAttachmentGuids));
-        List<String> existingAttachmentGuids =
-            attachmentQuery.build().find().map((e) => e.guid).whereNotNull().toList();
-
-        // Insert the attachments that don't yet exist
-        List<Attachment> attachmentsToInsert = attachmentsToSave.values
-            .where((element) => !existingAttachmentGuids.contains(element.guid))
-            .whereNotNull()
-            .toList();
-        Database.attachments.putMany(attachmentsToInsert);
-
-        // 2. Fetch all inserted/existing attachments based on input
-        QueryBuilder<Attachment> attachmentQuery2 = Database.attachments.query(Attachment_.guid.oneOf(inputAttachmentGuids));
-        List<Attachment> attachments = attachmentQuery2.build().find().whereNotNull().toList();
-
-        // 3. Create map of inserted/existing attachments
-        for (final a in attachments) {
-          attachmentMap[a.guid!] = a;
-        }
-      }
-
-      // 4. Check for existing messages & create list of new messages to save
-      QueryBuilder<Message> query = Database.messages.query(Message_.guid.oneOf(inputMessageGuids));
-      List<String> existingMessageGuids = query.build().find().map((e) => e.guid!).toList();
-      inputMessages = inputMessages.where((element) => !existingMessageGuids.contains(element.guid)).toList();
-
-      // 5. Fetch all handles and map the old handle ROWIDs from each message to the new ones based on the original ROWID
       List<Handle> handles = Database.handles.getAll();
+      _mapHandles(inputMessages, inputChat, handles);
 
-      for (final msg in inputMessages) {
-        msg.chat.target = inputChat;
-        msg.handle = handles.firstWhereOrNull((e) => e.originalROWID == msg.handleId);
-      }
+      List<Message> messages = _persistMessages(
+          inputMessages, inputMessageGuids, messageAttachments, attachmentMap);
 
-      // 6. Relate the attachments to the messages
-      for (final msg in inputMessages) {
-        final relatedAttachments =
-            messageAttachments[msg.guid]?.map((e) => attachmentMap[e]).whereNotNull().toList() ?? [];
-        msg.attachments = relatedAttachments;
-        msg.dbAttachments.addAll(relatedAttachments);
-      }
-
-      // 7. Save all messages (and handle/attachment relationships)
-      Database.messages.putMany(inputMessages);
-
-      // 8. Get the inserted messages
-      QueryBuilder<Message> messageQuery = Database.messages.query(Message_.guid.oneOf(inputMessageGuids));
-      List<Message> messages = messageQuery.build().find().toList();
-
-      // 9. Check inserted messages for associated message GUIDs & update hasReactions flag
-      Map<String, Message> messagesToUpdate = {};
-      for (final message in messages) {
-        // Update the handles from our cache
-        message.handle = handles.firstWhereOrNull((element) => element.originalROWID == message.handleId);
-
-        // Continue if there isn't an associated message GUID to process
-        if ((message.associatedMessageGuid ?? '').isEmpty) continue;
-
-        // Find the associated message in the DB and update the hasReactions flag
-        List<Message> associatedMessages =
-            Message.find(cond: Message_.guid.equals(message.associatedMessageGuid!)).toList();
-        if (associatedMessages.isNotEmpty) {
-          // Toggle the hasReactions flag
-          Message messageWithReaction = messagesToUpdate[associatedMessages[0].guid] ?? associatedMessages[0];
-          messageWithReaction.hasReactions = true;
-
-          // Make sure the current message has the associated message in it's list, and the hasReactions
-          // flag is set as well
-          Message reactionMessage = messagesToUpdate[message.guid!] ?? message;
-          for (var e in messageWithReaction.associatedMessages) {
-            if (e.guid == messageWithReaction.guid) {
-              e.hasReactions = true;
-              break;
-            }
-          }
-
-          // Update the cached values
-          messagesToUpdate[messageWithReaction.guid!] = messageWithReaction;
-          messagesToUpdate[reactionMessage.guid!] = reactionMessage;
-        }
-      }
-
-      // 10. Save the updated associated messages
-      if (messagesToUpdate.isNotEmpty) {
-        try {
-          Database.messages.putMany(messagesToUpdate.values.toList());
-        } catch (ex) {
-          print('Failed to put associated messages into DB: ${ex.toString()}');
-        }
-      }
-
-      // 11. Update the associated chat's last message
-      messages.sort(Message.sort);
-      bool isNewer = false;
-
-      // If the message was saved correctly, update this chat's latestMessage info,
-      // but only if the incoming message's date is newer
-      if (messages.isNotEmpty) {
-        final first = messages.first;
-        if (first.id != null || kIsWeb) {
-          isNewer = first.dateCreated!.isAfter(inputChat.latestMessage.dateCreated!);
-          if (isNewer) {
-            inputChat.latestMessage = first;
-            if (!first.isFromMe! && !cm.isChatActive(inputChat.guid)) {
-              inputChat.toggleHasUnread(true);
-            }
-          }
-        }
-      }
+      _updateReactions(messages, handles);
+      _updateChatLastMessage(inputChat, messages);
 
       return messages;
     });
   }
+
+  Map<String, Attachment> _prepareAttachments(
+      List<Message> inputMessages,
+      Map<String, List<String>> messageAttachments) {
+    Map<String, Attachment> attachmentsToSave = {};
+    for (final msg in inputMessages) {
+      for (final a in msg.attachments) {
+        if (!attachmentsToSave.containsKey(a!.guid)) {
+          attachmentsToSave[a.guid!] = a;
+        }
+        messageAttachments.putIfAbsent(msg.guid!, () => []);
+        if (!messageAttachments[msg.guid]!.contains(a.guid)) {
+          messageAttachments[msg.guid]!.add(a.guid!);
+        }
+      }
+    }
+
+    Map<String, Attachment> attachmentMap = {};
+    if (attachmentsToSave.isNotEmpty) {
+      List<String> inputAttachmentGuids =
+          attachmentsToSave.values.map((e) => e.guid).whereNotNull().toList();
+      QueryBuilder<Attachment> attachmentQuery = Database.attachments
+          .query(Attachment_.guid.oneOf(inputAttachmentGuids));
+      List<String> existingAttachmentGuids = attachmentQuery
+          .build()
+          .find()
+          .map((e) => e.guid)
+          .whereNotNull()
+          .toList();
+
+      List<Attachment> attachmentsToInsert = attachmentsToSave.values
+          .where((element) => !existingAttachmentGuids.contains(element.guid))
+          .whereNotNull()
+          .toList();
+      Database.attachments.putMany(attachmentsToInsert);
+
+      QueryBuilder<Attachment> attachmentQuery2 = Database.attachments
+          .query(Attachment_.guid.oneOf(inputAttachmentGuids));
+      List<Attachment> attachments =
+          attachmentQuery2.build().find().whereNotNull().toList();
+
+      for (final a in attachments) {
+        attachmentMap[a.guid!] = a;
+      }
+    }
+
+    return attachmentMap;
+  }
+
+  void _mapHandles(
+      List<Message> inputMessages, Chat inputChat, List<Handle> handles) {
+    for (final msg in inputMessages) {
+      msg.chat.target = inputChat;
+      msg.handle =
+          handles.firstWhereOrNull((e) => e.originalROWID == msg.handleId);
+    }
+  }
+
+  List<Message> _persistMessages(
+      List<Message> inputMessages,
+      List<String> inputMessageGuids,
+      Map<String, List<String>> messageAttachments,
+      Map<String, Attachment> attachmentMap) {
+    QueryBuilder<Message> query =
+        Database.messages.query(Message_.guid.oneOf(inputMessageGuids));
+    List<String> existingMessageGuids =
+        query.build().find().map((e) => e.guid!).toList();
+    inputMessages = inputMessages
+        .where((element) => !existingMessageGuids.contains(element.guid))
+        .toList();
+
+    for (final msg in inputMessages) {
+      final relatedAttachments = messageAttachments[msg.guid]
+              ?.map((e) => attachmentMap[e])
+              .whereNotNull()
+              .toList() ??
+          [];
+      msg.attachments = relatedAttachments;
+      msg.dbAttachments.addAll(relatedAttachments);
+    }
+
+    Database.messages.putMany(inputMessages);
+
+    QueryBuilder<Message> messageQuery =
+        Database.messages.query(Message_.guid.oneOf(inputMessageGuids));
+    return messageQuery.build().find().toList();
+  }
+
+  void _updateReactions(List<Message> messages, List<Handle> handles) {
+    Map<String, Message> messagesToUpdate = {};
+    for (final message in messages) {
+      message.handle =
+          handles.firstWhereOrNull((e) => e.originalROWID == message.handleId);
+      if ((message.associatedMessageGuid ?? '').isEmpty) continue;
+
+      List<Message> associatedMessages = Message.find(
+              cond: Message_.guid.equals(message.associatedMessageGuid!))
+          .toList();
+      if (associatedMessages.isNotEmpty) {
+        Message messageWithReaction =
+            messagesToUpdate[associatedMessages[0].guid] ?? associatedMessages[0];
+        messageWithReaction.hasReactions = true;
+
+        Message reactionMessage = messagesToUpdate[message.guid!] ?? message;
+        for (var e in messageWithReaction.associatedMessages) {
+          if (e.guid == messageWithReaction.guid) {
+            e.hasReactions = true;
+            break;
+          }
+        }
+
+        messagesToUpdate[messageWithReaction.guid!] = messageWithReaction;
+        messagesToUpdate[reactionMessage.guid!] = reactionMessage;
+      }
+    }
+
+    if (messagesToUpdate.isNotEmpty) {
+      try {
+        Database.messages.putMany(messagesToUpdate.values.toList());
+      } catch (ex) {
+        print('Failed to put associated messages into DB: ${ex.toString()}');
+      }
+    }
+  }
+
+  void _updateChatLastMessage(Chat inputChat, List<Message> messages) {
+    messages.sort(Message.sort);
+    bool isNewer = false;
+    if (messages.isNotEmpty) {
+      final first = messages.first;
+      if (first.id != null || kIsWeb) {
+        isNewer =
+            first.dateCreated!.isAfter(inputChat.latestMessage.dateCreated!);
+        if (isNewer) {
+          inputChat.latestMessage = first;
+          if (!first.isFromMe! && !cm.isChatActive(inputChat.guid)) {
+            inputChat.toggleHasUnread(true);
+          }
+        }
+      }
+    }
+  }
+
+  @visibleForTesting
+  Map<String, Attachment> prepareAttachmentsForTesting(
+          List<Message> inputMessages,
+          Map<String, List<String>> messageAttachments) =>
+      _prepareAttachments(inputMessages, messageAttachments);
+
+  @visibleForTesting
+  void mapHandlesForTesting(List<Message> inputMessages, Chat inputChat,
+          List<Handle> handles) =>
+      _mapHandles(inputMessages, inputChat, handles);
+
+  @visibleForTesting
+  List<Message> persistMessagesForTesting(
+          List<Message> inputMessages,
+          List<String> inputMessageGuids,
+          Map<String, List<String>> messageAttachments,
+          Map<String, Attachment> attachmentMap) =>
+      _persistMessages(
+          inputMessages, inputMessageGuids, messageAttachments, attachmentMap);
+
+  @visibleForTesting
+  void updateReactionsForTesting(
+          List<Message> messages, List<Handle> handles) =>
+      _updateReactions(messages, handles);
 }
 
 @Entity()
