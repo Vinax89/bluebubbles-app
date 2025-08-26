@@ -57,14 +57,16 @@ class _ManualEntryDialogState extends OptimizedState<ManualEntryDialog> {
     // If the URL is invalid, or the password is invalid, show an error
     if (!isValid || password.isEmpty) {
       error = "Please enter a valid URL and password!";
-      setState(() {});
+      connecting = false;
+      if (mounted) setState(() {});
       return;
     }
 
     String? addr = sanitizeServerAddress(address: url);
     if (addr == null) {
       error = "Server address is invalid!";
-      setState(() {});
+      connecting = false;
+      if (mounted) setState(() {});
       return;
     }
 
