@@ -1,4 +1,5 @@
 // ignore_for_file: camel_case_types
+// The stub reproduces ObjectBox-generated classes that use underscores.
 import 'package:bluebubbles/database/html/handle.dart';
 
 /// READ: Dummy file to allow objectbox related code to compile on Web. We use
@@ -136,7 +137,7 @@ class Query<T> {
 
   /// Finds Objects matching the query.
   List<T> find() {
-    return [];
+    return <T>[];
   }
 }
 

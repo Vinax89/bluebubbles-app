@@ -17,7 +17,6 @@ String getFullChatTitle(Chat _chat) {
 
     List<String> titles = [];
     for (int i = 0; i < chat.participants.length; i++) {
-      // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
       String? name = chat.participants[i].displayName;
 
       if (chat.participants.length > 1 && !name.isPhoneNumber) {
@@ -183,7 +182,6 @@ class Chat {
     bool updateLockChatIcon = false,
     bool updateLastReadMessageGuid = false,
   }) {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     WebListeners.notifyChat(this);
     return this;
   }
@@ -320,7 +318,6 @@ class Chat {
       if (isNewer) {
         _latestMessage = message;
         dateDeleted = null;
-        // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
         await chats.addChat(this);
       }
     }
@@ -369,22 +366,29 @@ class Chat {
     return null;
   }
 
-  static List<Attachment> getAttachments(Chat chat, {int offset = 0, int limit = 25}) {
-    return [];
+  static List<Attachment> getAttachments(Chat chat,
+      {int offset = 0, int limit = 25}) {
+    return <Attachment>[];
   }
 
   Future<List<Attachment>> getAttachmentsAsync() async {
-    return [];
+    return <Attachment>[];
   }
 
   static List<Message> getMessages(Chat chat,
-      {int offset = 0, int limit = 25, bool includeDeleted = false, bool getDetails = false}) {
-    return [];
+      {int offset = 0,
+      int limit = 25,
+      bool includeDeleted = false,
+      bool getDetails = false}) {
+    return <Message>[];
   }
 
   static Future<List<Message>> getMessagesAsync(Chat chat,
-      {int offset = 0, int limit = 25, bool includeDeleted = false, int? searchAround}) async {
-    return [];
+      {int offset = 0,
+      int limit = 25,
+      bool includeDeleted = false,
+      int? searchAround}) async {
+    return <Message>[];
   }
 
   Chat getParticipants() {
@@ -392,8 +396,9 @@ class Chat {
   }
 
   void webSyncParticipants() {
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
-    _participants = chats.webCachedHandles.where((e) => _participants.map((e2) => e2.address).contains(e.address)).toList();
+    _participants = chats.webCachedHandles
+        .where((e) => _participants.map((e2) => e2.address).contains(e.address))
+        .toList();
   }
 
   Chat addParticipant(Handle participant) {
@@ -419,7 +424,6 @@ class Chat {
     this.isPinned = isPinned;
     _pinIndex.value = null;
     save();
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     chats.updateChat(this);
     chats.sort();
     return this;
@@ -430,7 +434,6 @@ class Chat {
     muteType = isMuted ? "mute" : null;
     muteArgs = null;
     save();
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     chats.updateChat(this);
     chats.sort();
     return this;
@@ -440,7 +443,6 @@ class Chat {
     if (id == null) return this;
     this.isArchived = isArchived;
     save();
-    // ignore: argument_type_not_assignable, return_of_invalid_type, invalid_assignment, for_in_of_invalid_element_type
     chats.updateChat(this);
     chats.sort();
     return this;
