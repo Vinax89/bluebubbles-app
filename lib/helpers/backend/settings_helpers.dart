@@ -10,9 +10,13 @@ Future<bool> saveNewServerUrl(
     bool tryRestartForegroundService = true,
     bool restartSocket = true,
     bool force = false,
-    List<String> saveAdditionalSettings = const []
+    List<String> saveAdditionalSettings = const [],
+    Duration? delay,
   }
 ) async {
+  if (ss.settings.simulateServerDelay.value || delay != null) {
+    await Future.delayed(delay ?? const Duration(seconds: 2));
+  }
   String sanitized = sanitizeServerAddress(address: newServerUrl)!;
   if (force || sanitized != ss.settings.serverAddress.value) {
     ss.settings.serverAddress.value = sanitized;
@@ -41,9 +45,13 @@ Future<bool> saveNewServerUrl(
 Future<void> clearServerUrl(
   {
     bool tryRestartForegroundService = true,
-    List<String> saveAdditionalSettings = const []
+    List<String> saveAdditionalSettings = const [],
+    Duration? delay,
   }
 ) async {
+  if (ss.settings.simulateServerDelay.value || delay != null) {
+    await Future.delayed(delay ?? const Duration(seconds: 2));
+  }
   ss.settings.serverAddress.value = "";
   await ss.settings.saveMany(["serverAddress", ...saveAdditionalSettings]);
 

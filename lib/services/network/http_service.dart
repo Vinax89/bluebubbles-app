@@ -30,8 +30,17 @@ class HttpService extends GetxService {
     return params;
   }
 
-  /// Global try-catch function
-  Future<Response> runApiGuarded(Future<Response> Function() func, {bool checkOrigin = true}) async {
+  /// Global try-catch function with optional artificial delay
+  Future<Response> runApiGuarded(
+    Future<Response> Function() func, {
+    bool checkOrigin = true,
+    Duration? delay,
+  }) async {
+    // Simulate slow server responses when enabled in settings or when a delay is provided
+    if (ss.settings.simulateServerDelay.value || delay != null) {
+      await Future.delayed(delay ?? const Duration(seconds: 2));
+    }
+
     if (http.origin.isEmpty && checkOrigin) {
       return Future.error("No server URL!");
     }
