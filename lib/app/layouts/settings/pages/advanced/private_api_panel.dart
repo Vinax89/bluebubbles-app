@@ -242,7 +242,7 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                             show: ss.settings.enableQuickTapback.value,
                             child: Padding(
                               padding: const EdgeInsets.only(bottom: 5.0),
-                              child: SettingsOptions<String>(
+                              child: SettingsOptions<ReactionType>(
                                 title: "Quick Tapback",
                                 options: ReactionTypes.toList(),
                                 cupertinoCustomWidgets: [
@@ -251,8 +251,8 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.LOVE,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.LOVE),
+                                          associatedMessageType: ReactionType.love.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.love),
                                       message: null,
                                     ),
                                   ),
@@ -261,8 +261,8 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.LIKE,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.LIKE),
+                                          associatedMessageType: ReactionType.like.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.like),
                                       message: null,
                                     ),
                                   ),
@@ -271,8 +271,8 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.DISLIKE,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.DISLIKE),
+                                          associatedMessageType: ReactionType.dislike.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.dislike),
                                       message: null,
                                     ),
                                   ),
@@ -281,8 +281,8 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.LAUGH,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.LAUGH),
+                                          associatedMessageType: ReactionType.laugh.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.laugh),
                                       message: null,
                                     ),
                                   ),
@@ -291,8 +291,8 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.EMPHASIZE,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.EMPHASIZE),
+                                          associatedMessageType: ReactionType.emphasize.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.emphasize),
                                       message: null,
                                     ),
                                   ),
@@ -301,14 +301,14 @@ class _PrivateAPIPanelState extends CustomState<PrivateAPIPanel, void, PrivateAP
                                     child: ReactionWidget(
                                       reaction: Message(
                                           guid: "",
-                                          associatedMessageType: ReactionTypes.QUESTION,
-                                          isFromMe: ss.settings.quickTapbackType.value != ReactionTypes.QUESTION),
+                                          associatedMessageType: ReactionType.question.name,
+                                          isFromMe: ss.settings.quickTapbackType.value != ReactionType.question),
                                       message: null,
                                     ),
                                   ),
                                 ],
                                 initial: ss.settings.quickTapbackType.value,
-                                textProcessing: (val) => val,
+                                textProcessing: (val) => val.name,
                                 onChanged: (val) {
                                   if (val == null) return;
                                   ss.settings.quickTapbackType.value = val;

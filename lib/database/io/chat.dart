@@ -596,7 +596,7 @@ class Chat {
 
     /// If reaction and notify reactions off, then don't notify, otherwise notify
     return !ss.settings.notifyReactions.value &&
-        ReactionTypes.toList().contains(message?.associatedMessageType ?? "");
+        ReactionTypes.fromString(message?.associatedMessageType) != null;
   }
 
   /// Delete a chat locally. Prefer using softDelete so the chat doesn't come back

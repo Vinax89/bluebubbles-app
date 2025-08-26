@@ -111,7 +111,7 @@ class _MessagePopupHolderState extends OptimizedState<MessagePopupHolder> {
 
   void sendTapback([String? type, int? part]) {
     HapticFeedback.lightImpact();
-    final reaction = type ?? ss.settings.quickTapbackType.value;
+    final reaction = type ?? ss.settings.quickTapbackType.value.name;
     Logger.info("Sending reaction type: $reaction");
     outq.queue(OutgoingItem(
       type: QueueType.sendMessage,

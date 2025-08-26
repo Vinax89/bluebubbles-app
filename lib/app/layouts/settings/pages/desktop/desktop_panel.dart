@@ -268,7 +268,9 @@ class _DesktopPanelState extends OptimizedState<DesktopPanel> {
                                                       child: Material(
                                                         color: Colors.transparent,
                                                         child: Text(
-                                                          ReactionTypes.reactionToEmoji[value] ?? "Mark Read",
+                                                          ReactionTypes.reactionToEmoji[
+                                                                ReactionTypes.fromString(value)!] ??
+                                                              "Mark Read",
                                                           style: TextStyle(
                                                               fontSize: 16,
                                                               color: (hardDisabled && value == "Mark Read")
@@ -438,7 +440,8 @@ class _DesktopPanelState extends OptimizedState<DesktopPanel> {
                                                               index == markReadIndex
                                                                   ? ss.settings.actionList[index]
                                                                   : ReactionTypes.reactionToEmoji[
-                                                                      ss.settings.actionList[index]]!,
+                                                                      ReactionTypes.fromString(
+                                                                          ss.settings.actionList[index])!]!,
                                                               style: context.textTheme.bodyMedium!
                                                                   .copyWith(fontSize: size * 0.037),
                                                               textAlign: TextAlign.center,

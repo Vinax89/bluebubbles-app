@@ -129,7 +129,7 @@ class Settings {
 
   // Quick tapback settings
   final RxBool enableQuickTapback = false.obs;
-  final RxString quickTapbackType = ReactionTypes.toList()[0].obs; // The 'love' reaction
+  final Rx<ReactionType> quickTapbackType = ReactionType.love.obs; // The 'love' reaction
 
   // Slideable action settings
   final Rx<MaterialSwipeAction> materialRightAction = MaterialSwipeAction.pin.obs;
@@ -173,12 +173,12 @@ class Settings {
   final RxList<int> selectedActionIndices = Platform.isWindows ? [0, 1, 2, 3, 4].obs : [0, 1, 2].obs;
   final RxList<String> actionList = RxList.from([
     "Mark Read",
-    ReactionTypes.LOVE,
-    ReactionTypes.LIKE,
-    ReactionTypes.LAUGH,
-    ReactionTypes.EMPHASIZE,
-    ReactionTypes.DISLIKE,
-    ReactionTypes.QUESTION
+    ReactionType.love.name,
+    ReactionType.like.name,
+    ReactionType.laugh.name,
+    ReactionType.emphasize.name,
+    ReactionType.dislike.name,
+    ReactionType.question.name
   ]);
 
   // Message options order
@@ -383,7 +383,7 @@ class Settings {
       'generateFakeContactNames': generateFakeContactNames.value,
       'generateFakeMessageContent': hideMessageContent.value,
       'enableQuickTapback': enableQuickTapback.value,
-      'quickTapbackType': quickTapbackType.value,
+      'quickTapbackType': quickTapbackType.value.name,
       'materialRightAction': materialRightAction.value.index,
       'materialLeftAction': materialLeftAction.value.index,
       'shouldSecure': shouldSecure.value,
@@ -520,7 +520,8 @@ class Settings {
     ss.settings.enableUnifiedPush.value = map['enableUnifiedPush'] ?? false;
     ss.settings.endpointUnifiedPush.value = map['endpointUnifiedPush'] ?? "";
     ss.settings.enableQuickTapback.value = map['enableQuickTapback'] ?? false;
-    ss.settings.quickTapbackType.value = map['quickTapbackType'] ?? ReactionTypes.toList()[0];
+    ss.settings.quickTapbackType.value =
+        ReactionTypes.fromString(map['quickTapbackType']) ?? ReactionType.love;
     ss.settings.materialRightAction.value = map['materialRightAction'] != null
         ? MaterialSwipeAction.values[map['materialRightAction']]
         : MaterialSwipeAction.pin;
@@ -668,7 +669,8 @@ class Settings {
     s.enableUnifiedPush.value = map['enableUnifiedPush'] ?? false;
     s.endpointUnifiedPush.value = map['endpointUnifiedPush'] ?? "";
     s.enableQuickTapback.value = map['enableQuickTapback'] ?? false;
-    s.quickTapbackType.value = map['quickTapbackType'] ?? ReactionTypes.toList()[0];
+    s.quickTapbackType.value =
+        ReactionTypes.fromString(map['quickTapbackType']) ?? ReactionType.love;
     s.materialRightAction.value = map['materialRightAction'] != null
         ? MaterialSwipeAction.values[map['materialRightAction']]
         : MaterialSwipeAction.pin;
@@ -748,12 +750,12 @@ List<String> _processActionList(dynamic rawJson) {
     debugPrint("Using default actionList");
     return [
       "Mark Read",
-      ReactionTypes.LOVE,
-      ReactionTypes.LIKE,
-      ReactionTypes.LAUGH,
-      ReactionTypes.EMPHASIZE,
-      ReactionTypes.DISLIKE,
-      ReactionTypes.QUESTION
+      ReactionType.love.name,
+      ReactionType.like.name,
+      ReactionType.laugh.name,
+      ReactionType.emphasize.name,
+      ReactionType.dislike.name,
+      ReactionType.question.name
     ];
   }
 }

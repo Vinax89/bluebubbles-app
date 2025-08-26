@@ -2,63 +2,58 @@ import 'package:bluebubbles/database/models.dart' hide Entity;
 import 'package:emojis/emojis.dart';
 import 'package:flutter/foundation.dart';
 
-class ReactionTypes {
-  // ignore: non_constant_identifier_names
-  static const String LOVE = "love";
-  // ignore: non_constant_identifier_names
-  static const String LIKE = "like";
-  // ignore: non_constant_identifier_names
-  static const String DISLIKE = "dislike";
-  // ignore: non_constant_identifier_names
-  static const String LAUGH = "laugh";
-  // ignore: non_constant_identifier_names
-  static const String EMPHASIZE = "emphasize";
-  // ignore: non_constant_identifier_names
-  static const String QUESTION = "question";
+enum ReactionType { love, like, dislike, laugh, emphasize, question }
 
-  static List<String> toList() {
-    return [
-      LOVE,
-      LIKE,
-      DISLIKE,
-      LAUGH,
-      EMPHASIZE,
-      QUESTION,
-    ];
+class ReactionTypes {
+  static List<ReactionType> toList() {
+    return ReactionType.values;
   }
 
-  static final Map<String, String> reactionToVerb = {
-    LOVE: "loved",
-    LIKE: "liked",
-    DISLIKE: "disliked",
-    LAUGH: "laughed at",
-    EMPHASIZE: "emphasized",
-    QUESTION: "questioned",
-    "-$LOVE": "removed a heart from",
-    "-$LIKE": "removed a like from",
-    "-$DISLIKE": "removed a dislike from",
-    "-$LAUGH": "removed a laugh from",
-    "-$EMPHASIZE": "removed an exclamation from",
-    "-$QUESTION": "removed a question mark from",
+  static ReactionType? fromString(String? type) {
+    if (type == null) return null;
+    try {
+      return ReactionType.values.firstWhere((e) => e.name == type);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static final Map<ReactionType, String> reactionToVerb = {
+    ReactionType.love: "loved",
+    ReactionType.like: "liked",
+    ReactionType.dislike: "disliked",
+    ReactionType.laugh: "laughed at",
+    ReactionType.emphasize: "emphasized",
+    ReactionType.question: "questioned",
   };
 
-  static final Map<String, String> reactionToEmoji = {
-    LOVE: Emojis.redHeart,
-    LIKE: Emojis.thumbsUp,
-    DISLIKE: Emojis.thumbsDown,
-    LAUGH: Emojis.faceWithTearsOfJoy,
-    EMPHASIZE: Emojis.redExclamationMark,
-    QUESTION: Emojis.redQuestionMark,
+  static final Map<ReactionType, String> negativeReactionToVerb = {
+    ReactionType.love: "removed a heart from",
+    ReactionType.like: "removed a like from",
+    ReactionType.dislike: "removed a dislike from",
+    ReactionType.laugh: "removed a laugh from",
+    ReactionType.emphasize: "removed an exclamation from",
+    ReactionType.question: "removed a question mark from",
   };
 
-  static final Map<String, String> emojiToReaction = {
-    Emojis.redHeart: LOVE,
-    Emojis.thumbsUp: LIKE,
-    Emojis.thumbsDown: DISLIKE,
-    Emojis.faceWithTearsOfJoy: LAUGH,
-    Emojis.redExclamationMark: EMPHASIZE,
-    Emojis.redQuestionMark: QUESTION,
+  static final Map<ReactionType, String> reactionToEmoji = {
+    ReactionType.love: Emojis.redHeart,
+    ReactionType.like: Emojis.thumbsUp,
+    ReactionType.dislike: Emojis.thumbsDown,
+    ReactionType.laugh: Emojis.faceWithTearsOfJoy,
+    ReactionType.emphasize: Emojis.redExclamationMark,
+    ReactionType.question: Emojis.redQuestionMark,
   };
+
+  static final Map<String, ReactionType> emojiToReaction =
+      reactionToEmoji.map((key, value) => MapEntry(value, key));
+
+  static String? getVerb(String reaction) {
+    final negative = reaction.startsWith('-');
+    final type = fromString(reaction.replaceFirst('-', ''));
+    if (type == null) return null;
+    return negative ? negativeReactionToVerb[type] : reactionToVerb[type];
+  }
 }
 
 List<Message> getUniqueReactionMessages(List<Message> messages) {
