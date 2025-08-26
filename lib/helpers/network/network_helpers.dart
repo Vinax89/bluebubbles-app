@@ -6,7 +6,7 @@ import 'package:universal_io/io.dart';
 
 /// Take the passed [address] or serverAddress from Settings
 /// and sanitize it, ensuring it includes an HTTP or HTTPS scheme.
-/// Uses HTTPS for ngrok.io, trycloudflare.com, and zrok.io addresses; otherwise HTTP.
+/// HTTPS is used by default unless the user explicitly provides an HTTP scheme.
 String? sanitizeServerAddress({String? address}) {
   String serverAddress = address ?? http.origin;
 
@@ -15,11 +15,7 @@ String? sanitizeServerAddress({String? address}) {
 
   Uri? uri = Uri.tryParse(sanitized);
   if (uri?.scheme.isEmpty ?? false) {
-    if (sanitized.contains("ngrok.io") || sanitized.contains("trycloudflare.com") || sanitized.contains("zrok.io")) {
-      uri = Uri.tryParse("https://$sanitized");
-    } else {
-      uri = Uri.tryParse("http://$sanitized");
-    }
+    uri = Uri.tryParse("https://$sanitized");
   }
 
   return uri.toString();
