@@ -73,6 +73,8 @@ class Settings {
   final RxBool statusIndicatorsOnChats = false.obs;
   final RxInt apiTimeout = 30000.obs;
   final RxBool simulateServerDelay = false.obs;
+  final RxBool chaosMode = false.obs;
+  final RxBool stressMode = false.obs;
   final RxBool allowUpsideDownRotation = false.obs;
   final RxBool cancelQueuedMessages = false.obs;
   final RxBool repliesToPrevious = false.obs;
@@ -316,6 +318,8 @@ class Settings {
       'indicatorsOnPinnedChats': statusIndicatorsOnChats.value,
       'apiTimeout': apiTimeout.value,
       'simulateServerDelay': simulateServerDelay.value,
+      'chaosMode': chaosMode.value,
+      'stressMode': stressMode.value,
       'allowUpsideDownRotation': allowUpsideDownRotation.value,
       'cancelQueuedMessages': cancelQueuedMessages.value,
       'repliesToPrevious': repliesToPrevious.value,
@@ -445,6 +449,8 @@ class Settings {
     ss.settings.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     ss.settings.apiTimeout.value = map['apiTimeout'] ?? 15000;
     ss.settings.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
+    ss.settings.chaosMode.value = map['chaosMode'] ?? false;
+    ss.settings.stressMode.value = map['stressMode'] ?? false;
     ss.settings.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;
     ss.settings.cancelQueuedMessages.value = map['cancelQueuedMessages'] ?? false;
     ss.settings.repliesToPrevious.value = map['repliesToPrevious'] ?? false;
@@ -585,6 +591,8 @@ class Settings {
     s.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     s.apiTimeout.value = map['apiTimeout'] ?? 15000;
     s.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
+    s.chaosMode.value = map['chaosMode'] ?? false;
+    s.stressMode.value = map['stressMode'] ?? false;
     s.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;
     s.cancelQueuedMessages.value = map['cancelQueuedMessages'] ?? false;
     s.repliesToPrevious.value = map['repliesToPrevious'] ?? false;
