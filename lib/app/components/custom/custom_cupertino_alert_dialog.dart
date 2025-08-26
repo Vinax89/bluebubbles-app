@@ -1106,8 +1106,9 @@ class CupertinoDialogAction extends StatelessWidget {
   }
 
   // Dialog action content is permitted to be as large as it wants when in
-  // accessibility mode. If text is used as the content, the text wraps instead
-  // of ellipsizing.
+  // accessibility mode or when a long string without spaces is provided. In
+  // these cases, if text is used as the content, the text wraps instead of
+  // ellipsizing to ensure that all characters remain visible.
   Widget _buildContentWithAccessibilitySizingPolicy({
     required TextStyle textStyle,
     required Widget content,
@@ -1119,6 +1120,22 @@ class CupertinoDialogAction extends StatelessWidget {
       softWrap: true,
       child: content,
     );
+  }
+
+  // Determines whether the given content contains any whitespace. If the
+  // content is a [Text] widget without any whitespace characters, it is treated
+  // as a single long word that should wrap instead of being ellipsized. For
+  // non-text content, whitespace is assumed so that the regular sizing policy
+  // remains in effect.
+  bool _contentHasWhitespace(Widget content) {
+    if (content is Text) {
+      final String? data =
+          content.data ?? content.textSpan?.toPlainText(includePlaceholders: false);
+      if (data != null) {
+        return data.contains(RegExp(r"\s"));
+      }
+    }
+    return true;
   }
 
   @override
@@ -1139,13 +1156,12 @@ class CupertinoDialogAction extends StatelessWidget {
       style = style.copyWith(color: style.color!.withOpacity(0.5));
     }
 
-    // Apply a sizing policy to the action button's content based on whether or
-    // not the device is in accessibility mode.
-    // TODO(mattcarroll): The following logic is not entirely correct. It is also
-    // the case that if content text does not contain a space, it should also
-    // wrap instead of ellipsizing. We are consciously not implementing that
-    // now due to complexity.
-    final Widget sizedContent = _isInAccessibilityMode(context)
+    // Apply a sizing policy to the action button's content based on whether the
+    // device is in accessibility mode or the provided content lacks whitespace.
+    // In these cases the text wraps instead of ellipsizing to ensure that all
+    // information remains readable.
+    final bool hasWhitespace = _contentHasWhitespace(child);
+    final Widget sizedContent = _isInAccessibilityMode(context) || !hasWhitespace
         ? _buildContentWithAccessibilitySizingPolicy(
             textStyle: style,
             content: child,
