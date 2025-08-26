@@ -53,7 +53,8 @@ class MessageHolder extends CustomStateful<MessageWidgetController> {
   CustomState createState() => _MessageHolderState();
 }
 
-class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidgetController> {
+class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidgetController>
+    with AutomaticKeepAliveClientMixin {
   Message get message => controller.message;
   Message? get olderMessage => controller.oldMessage;
   Message? get newerMessage => controller.newMessage;
@@ -168,7 +169,11 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     controller.built = true;
     final stickers = message.associatedMessages.where((e) => e.associatedMessageType == "sticker");
     final reactions = message.associatedMessages.where((e) => ReactionTypes.toList().contains(e.associatedMessageType?.replaceAll("-", "")));

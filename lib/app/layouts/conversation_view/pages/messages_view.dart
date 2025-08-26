@@ -50,7 +50,6 @@ class MessagesViewState extends OptimizedState<MessagesView> {
   late final messageService = widget.customService ?? ms(chat.guid)
     ..init(chat, handleNewMessage, handleUpdatedMessage, handleDeletedMessage, jumpToMessage);
   final smartReply = GoogleMlKit.nlp.smartReply();
-  final listKey = GlobalKey<SliverAnimatedListState>();
   final RxBool dragging = false.obs;
   final RxInt numFiles = 0.obs;
   final RxBool latestMessageDeliveredState = false.obs;
@@ -67,6 +66,7 @@ class MessagesViewState extends OptimizedState<MessagesView> {
   @override
   void initState() {
     super.initState();
+    scrollController.addListener(_scrollListener);
 
     eventDispatcher.stream.listen((e) async {
       if (e.item1 == "refresh-messagebloc" && e.item2 == chat.guid) {
@@ -100,11 +100,11 @@ class MessagesViewState extends OptimizedState<MessagesView> {
       }
       _messages = messageService.struct.messages;
       _messages.sort(Message.sort);
-      setState(() {});
-      _messages.forEachIndexed((i, m) {
-        final c = mwc(m);
-        c.cvController = controller;
-        listKey.currentState!.insertItem(i, duration: const Duration(milliseconds: 0));
+      setState(() {
+        for (Message m in _messages) {
+          final c = mwc(m);
+          c.cvController = controller;
+        }
       });
       // scroll to message if needed
       if (searchMessage != null) {
@@ -132,6 +132,7 @@ class MessagesViewState extends OptimizedState<MessagesView> {
 
   @override
   void dispose() {
+    scrollController.removeListener(_scrollListener);
     if (!kIsWeb && !kIsDesktop) smartReply.close();
     chat.lastReadMessageGuid = _messages.first.guid;
     chat.save(updateLastReadMessageGuid: true);
@@ -140,6 +141,12 @@ class MessagesViewState extends OptimizedState<MessagesView> {
       getActiveMwc(m.guid!)?.close();
     }
     super.dispose();
+  }
+
+  void _scrollListener() {
+    if (scrollController.position.extentAfter < 1000 && !fetching) {
+      loadNextChunk();
+    }
   }
 
   void getFocusState() {
@@ -222,33 +229,22 @@ class MessagesViewState extends OptimizedState<MessagesView> {
 
     if (noMoreMessages) return setState(() {});
 
-    final oldLength = _messages.length;
     _messages = messageService.struct.messages;
     _messages.sort(Message.sort);
     fetching = false;
-    _messages.sublist(max(oldLength - 1, 0)).forEachIndexed((i, m) {
-      if (!mounted) return;
-      final c = mwc(m);
-      c.cvController = controller;
-      listKey.currentState!.insertItem(i, duration: const Duration(milliseconds: 0));
+    setState(() {
+      for (Message m in _messages) {
+        final c = mwc(m);
+        c.cvController = controller;
+      }
     });
-    // should only happen when a reaction is the most recent message
-    if (oldLength == 0) {
-      setState(() {});
-    }
   }
 
   void handleNewMessage(Message message) async {
     _messages.add(message);
     _messages.sort(Message.sort);
     final insertIndex = _messages.indexOf(message);
-
-    if (listKey.currentState != null) {
-      listKey.currentState!.insertItem(
-        insertIndex,
-        duration: const Duration(milliseconds: 500),
-      );
-    }
+    setState(() {});
 
     if (insertIndex == 0 && showSmartReplies) {
       _addMessageToSmartReply(message);
@@ -289,8 +285,9 @@ class MessagesViewState extends OptimizedState<MessagesView> {
   void handleDeletedMessage(Message message) {
     final index = _messages.indexWhere((e) => e.guid == message.guid);
     if (index != -1) {
-      _messages.removeAt(index);
-      listKey.currentState!.removeItem(index, (context, animation) => const SizedBox.shrink());
+      setState(() {
+        _messages.removeAt(index);
+      });
     }
   }
 
@@ -412,6 +409,7 @@ class MessagesViewState extends OptimizedState<MessagesView> {
                         controller: scrollController,
                         reverse: true,
                         physics: ThemeSwitcher.getScrollPhysics(),
+                        cacheExtent: 1000,
                         slivers: <Widget>[
                           if (showSmartReplies || internalSmartReplies.isNotEmpty)
                             SliverToBoxAdapter(
@@ -512,20 +510,14 @@ class MessagesViewState extends OptimizedState<MessagesView> {
                             const SliverToBoxAdapter(
                               child: Loader(text: "Loading surrounding message context..."),
                             ),
-                          SliverAnimatedList(
-                              initialItemCount: _messages.length + 1,
-                              key: listKey,
-                              findChildIndexCallback: (key) => findChildIndexByKey(_messages, key, (item) => item.guid),
-                              itemBuilder: (BuildContext context, int index, Animation<double> animation) {
-                                // paginate
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
                                 if (index >= _messages.length) {
-                                  if (!noMoreMessages && initialized && index == _messages.length) {
-                                    if (!fetching) {
-                                      loadNextChunk();
-                                    }
+                                  if (!noMoreMessages && initialized && !fetching) {
+                                    loadNextChunk();
                                     return const Loader();
                                   }
-
                                   return const SizedBox.shrink();
                                 }
 
@@ -555,43 +547,17 @@ class MessagesViewState extends OptimizedState<MessagesView> {
                                   ),
                                 );
 
-                                if (index == 0) {
-                                  return SizeTransition(
-                                    axis: Axis.vertical,
-                                    sizeFactor: animation.drive(Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeInOut))),
-                                    child: SlideTransition(
-                                        position: animation.drive(
-                                          Tween(
-                                            begin: const Offset(0.0, 1),
-                                            end: const Offset(0.0, 0.0),
-                                          ).chain(
-                                            CurveTween(
-                                              curve: Curves.easeInOut,
-                                            ),
-                                          ),
-                                        ),
-                                        child: AnimatedBuilder(
-                                          animation: animation,
-                                          builder: (context, child) {
-                                            return Opacity(
-                                              opacity: message.guid!.contains("temp") &&
-                                                      (!isNullOrEmpty(message.text) || !isNullOrEmpty(message.subject)) &&
-                                                      !animation.isCompleted
-                                                  ? 0
-                                                  : 1,
-                                              child: child,
-                                            );
-                                          },
-                                          child: messageWidget,
-                                        )),
-                                  );
-                                }
-
                                 return SizedBox(
                                   key: ValueKey(_messages[index].guid!),
                                   child: messageWidget,
                                 );
-                              }),
+                              },
+                              childCount: _messages.length + 1,
+                              findChildIndexCallback: (key) => findChildIndexByKey(_messages, key, (item) => item.guid),
+                              addAutomaticKeepAlives: true,
+                              shouldRebuild: (oldDelegate) => oldDelegate.estimatedChildCount != _messages.length + 1,
+                            ),
+                          ),
                           if (pinnedMessage != null)
                             SliverToBoxAdapter(
                               child: PinnedMessageBanner(message: pinnedMessage),
