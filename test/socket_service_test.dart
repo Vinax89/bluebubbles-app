@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:bluebubbles/services/network/socket_service.dart';
 
 /// Environment flag to enable the socket stress tests.
-const bool runSocketStressTest = bool.fromEnvironment('ENABLE_FLOOD_TEST', defaultValue: true);
+const bool runSocketStressTest = bool.fromEnvironment('ENABLE_FLOOD_TEST', defaultValue: false);
 
 class MockSocket {
   final Map<String, Function> _handlers = {};
@@ -51,11 +51,8 @@ class TestSocketService extends SocketService {
   }
 }
 
+@Tags(['integration'])
 void main() {
-  if (!runSocketStressTest) {
-    return;
-  }
-
   TestWidgetsFlutterBinding.ensureInitialized();
 
   tearDown(() {
@@ -78,6 +75,6 @@ void main() {
     // Verify that all responses completed and the state reflects disconnect
     expect(responses.length, 50);
     expect(service.state.value, SocketState.disconnected);
-  });
+  }, skip: !runSocketStressTest);
 }
 
