@@ -109,11 +109,13 @@ class MessagesService extends GetxController {
     message.handle = message.getHandle();
     if (message.hasAttachments && !kIsWeb) {
       message.attachments = List<Attachment>.from(message.dbAttachments);
-      // we may need an artificial delay in some cases since the attachment
-      // relation is initialized after message itself is saved
-      if (message.attachments.isEmpty) {
-        await Future.delayed(const Duration(milliseconds: 250));
-        message.attachments = List<Attachment>.from(message.dbAttachments);
+      if (message.attachments.isEmpty && message.id != null) {
+        final attachments = await Database.attachments
+            .query(Attachment_.message.equals(message.id!))
+            .watch(triggerImmediately: true)
+            .map((q) => q.find())
+            .firstWhere((atts) => atts.isNotEmpty);
+        message.attachments = List<Attachment?>.from(attachments);
       }
     }
     // add this as a reaction if needed, update thread originators and associated messages
