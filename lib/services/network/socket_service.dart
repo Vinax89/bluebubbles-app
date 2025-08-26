@@ -159,6 +159,60 @@ class SocketService extends GetxService {
     return completer.future;
   }
 
+  /// Benchmark utility that sends [messageCount] synthetic messages
+  /// to the server with [concurrency] parallel sends.
+  ///
+  /// Uses [sendMessage] under the hood and records latency and
+  /// throughput metrics which are logged once complete.
+  Future<void> runBenchmark({int messageCount = 100, int concurrency = 1}) async {
+    if (messageCount <= 0 || concurrency <= 0) {
+      Logger.error('Message count and concurrency must be greater than 0');
+      return;
+    }
+
+    final List<Duration> latencies = [];
+    final Stopwatch totalWatch = Stopwatch()..start();
+
+    int sent = 0;
+    while (sent < messageCount) {
+      final List<Future<void>> futures = [];
+      for (int i = 0; i < concurrency && sent < messageCount; i++, sent++) {
+        final int current = sent;
+        futures.add(() async {
+          final Map<String, dynamic> data = {
+            'index': current,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          };
+          final Stopwatch sw = Stopwatch()..start();
+          await sendMessage('benchmark', data);
+          sw.stop();
+          latencies.add(sw.elapsed);
+        }());
+      }
+
+      await Future.wait(futures);
+    }
+
+    totalWatch.stop();
+
+    if (latencies.isEmpty) {
+      Logger.info('No messages sent during benchmark');
+      return;
+    }
+
+    final Duration totalElapsed = totalWatch.elapsed;
+    final Duration avgLatency =
+        latencies.fold(Duration.zero, (a, b) => a + b) ~/ latencies.length;
+    final double throughput =
+        messageCount / totalElapsed.inMilliseconds * 1000.0;
+
+    Logger.info('Socket benchmark complete');
+    Logger.info('Total messages: $messageCount');
+    Logger.info('Total time: ${totalElapsed.inMilliseconds} ms');
+    Logger.info('Average latency: ${avgLatency.inMilliseconds} ms');
+    Logger.info('Throughput: ${throughput.toStringAsFixed(2)} msg/s');
+  }
+
   void handleStatusUpdate(SocketState status, dynamic data) {
     if (_lastState == status) return;
     _lastState = status;
