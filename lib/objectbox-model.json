@@ -598,7 +598,18 @@
           "type": 1
         }
       ],
-      "relations": []
+      "relations": [],
+      "indexes": [
+        {
+          "id": "17:7910730320894018600",
+          "name": "chatId_dateCreated",
+          "unique": false,
+          "properties": [
+            "39:1372898255926257108",
+            "9:5531207057664871058"
+          ]
+        }
+      ]
     },
     {
       "id": "15:7753273527865539946",
@@ -730,7 +741,7 @@
     }
   ],
   "lastEntityId": "17:2547083341603323785",
-  "lastIndexId": "16:6243763364531768800",
+  "lastIndexId": "17:7910730320894018600",
   "lastRelationId": "1:7492985733214117623",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

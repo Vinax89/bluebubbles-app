@@ -43,9 +43,13 @@ class GetChatAttachments extends AsyncTask<List<dynamic>, List<Attachment>> {
       /// Query the [Database.messageBox] for all the message IDs and order by date
       /// descending
       final query = (Database.messages.query(includeDeleted
-          ? Message_.dateCreated.notNull().and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
-          : Message_.dateDeleted.isNull().and(Message_.dateCreated.notNull()))
-            ..link(Message_.chat, Chat_.id.equals(chatId))
+          ? Message_.dateCreated
+              .notNull()
+              .and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
+          : Message_.dateDeleted
+              .isNull()
+              .and(Message_.dateCreated.notNull()))
+            .and(Message_.chatId.equals(chatId))
             ..order(Message_.dateCreated, flags: Order.descending))
           .build();
       final messages = query.find();
@@ -98,10 +102,14 @@ class GetMessages extends AsyncTask<List<dynamic>, List<Message>> {
       final messages = <Message>[];
       if (searchAround == null) {
         final query = (Database.messages.query(includeDeleted
-            ? Message_.dateCreated.notNull().and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
-            : Message_.dateDeleted.isNull().and(Message_.dateCreated.notNull()))
-          ..link(Message_.chat, Chat_.id.equals(chatId))
-          ..order(Message_.dateCreated, flags: Order.descending))
+                ? Message_.dateCreated
+                    .notNull()
+                    .and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
+                : Message_.dateDeleted
+                    .isNull()
+                    .and(Message_.dateCreated.notNull()))
+              .and(Message_.chatId.equals(chatId))
+            ..order(Message_.dateCreated, flags: Order.descending))
             .build();
         query
           ..limit = limit
@@ -109,20 +117,34 @@ class GetMessages extends AsyncTask<List<dynamic>, List<Message>> {
         messages.addAll(query.find());
         query.close();
       } else {
-        final beforeQuery = (Database.messages.query(Message_.dateCreated.lessThan(searchAround).and(includeDeleted
-            ? Message_.dateCreated.notNull().and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
-            : Message_.dateDeleted.isNull().and(Message_.dateCreated.notNull())))
-          ..link(Message_.chat, Chat_.id.equals(chatId))
-          ..order(Message_.dateCreated, flags: Order.descending))
+        final beforeQuery = (Database.messages.query(
+                Message_.dateCreated
+                    .lessThan(searchAround)
+                    .and(includeDeleted
+                        ? Message_.dateCreated
+                            .notNull()
+                            .and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
+                        : Message_.dateDeleted
+                            .isNull()
+                            .and(Message_.dateCreated.notNull()))
+                    .and(Message_.chatId.equals(chatId)))
+              ..order(Message_.dateCreated, flags: Order.descending))
             .build();
         beforeQuery.limit = limit;
         final before = beforeQuery.find();
         beforeQuery.close();
-        final afterQuery = (Database.messages.query(Message_.dateCreated.greaterThan(searchAround).and(includeDeleted
-            ? Message_.dateCreated.notNull().and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
-            : Message_.dateDeleted.isNull().and(Message_.dateCreated.notNull())))
-          ..link(Message_.chat, Chat_.id.equals(chatId))
-          ..order(Message_.dateCreated))
+        final afterQuery = (Database.messages.query(
+                Message_.dateCreated
+                    .greaterThan(searchAround)
+                    .and(includeDeleted
+                        ? Message_.dateCreated
+                            .notNull()
+                            .and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
+                        : Message_.dateDeleted
+                            .isNull()
+                            .and(Message_.dateCreated.notNull()))
+                    .and(Message_.chatId.equals(chatId)))
+              ..order(Message_.dateCreated))
             .build();
         afterQuery.limit = limit;
         final after = afterQuery.find();
@@ -783,9 +805,13 @@ class Chat {
     if (kIsWeb || chat.id == null) return [];
     return Database.runInTransaction(TxMode.read, () {
       final query = (Database.messages.query(includeDeleted
-              ? Message_.dateCreated.notNull().and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
-              : Message_.dateDeleted.isNull().and(Message_.dateCreated.notNull()))
-            ..link(Message_.chat, Chat_.id.equals(chat.id!))
+              ? Message_.dateCreated
+                  .notNull()
+                  .and(Message_.dateDeleted.isNull().or(Message_.dateDeleted.notNull()))
+              : Message_.dateDeleted
+                  .isNull()
+                  .and(Message_.dateCreated.notNull()))
+            .and(Message_.chatId.equals(chat.id!))
             ..order(Message_.dateCreated, flags: Order.descending))
           .build();
       query
