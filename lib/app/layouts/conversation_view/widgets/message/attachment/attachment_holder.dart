@@ -312,6 +312,8 @@ class _AttachmentHolderState extends CustomState<AttachmentHolder, void, Message
                                 child: AudioPlayer(
                                   transcript: audioTranscript,
                                   attachment: attachment,
+                                  message: message,
+                                  part: part.part,
                                   file: _content,
                                   controller: controller.cvController,
                                 ),

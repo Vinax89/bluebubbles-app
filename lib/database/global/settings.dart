@@ -43,6 +43,7 @@ class Settings {
   final RxBool doubleTapForDetails = false.obs;
   final RxBool denseChatTiles = false.obs;
   final RxBool smartReply = false.obs;
+  final RxBool enableAudioTranscription = false.obs;
   final RxBool showConnectionIndicator = false.obs;
   final RxBool showSyncIndicator = true.obs;
   final RxInt sendDelay = 0.obs;
@@ -306,6 +307,7 @@ class Settings {
       'doubleTapForDetails': doubleTapForDetails.value,
       'denseChatTiles': denseChatTiles.value,
       'smartReply': smartReply.value,
+      'enableAudioTranscription': enableAudioTranscription.value,
       'showConnectionIndicator': showConnectionIndicator.value,
       'showSyncIndicator': showSyncIndicator.value,
       'sendDelay': sendDelay.value,
@@ -588,6 +590,7 @@ class Settings {
     s.doubleTapForDetails.value = map['doubleTapForDetails'] ?? false;
     s.denseChatTiles.value = map['denseChatTiles'] ?? false;
     s.smartReply.value = map['smartReply'] ?? false;
+    s.enableAudioTranscription.value = map['enableAudioTranscription'] ?? false;
     s.showConnectionIndicator.value = map['showConnectionIndicator'] ?? false;
     s.showSyncIndicator.value = map['showSyncIndicator'] ?? true;
     s.sendDelay.value = map['sendDelay'] ?? 0;
