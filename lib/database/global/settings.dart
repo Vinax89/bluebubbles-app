@@ -19,6 +19,7 @@ class Settings {
   final RxString guidAuthKey = "".obs;
   final RxString serverAddress = "".obs;
   final RxMap<String, String> customHeaders = <String, String>{}.obs;
+  final RxString gifApiKey = "".obs;
   final RxBool trustSelfSignedCerts = false.obs;
   final RxBool finishedSetup = false.obs;
   final RxBool reachedConversationList = false.obs;
@@ -417,6 +418,7 @@ class Settings {
         'firstFcmRegisterDate': firstFcmRegisterDate.value,
         'sendSoundPath': sendSoundPath.value,
         'receiveSoundPath': receiveSoundPath.value,
+        'gifApiKey': gifApiKey.value,
       });
     }
     return map;
@@ -467,6 +469,7 @@ class Settings {
     ss.settings.tabletMode.value = kIsDesktop || (map['tabletMode'] ?? true);
     ss.settings.immersiveMode.value = map['immersiveMode'] ?? false;
     ss.settings.avatarScale.value = map['avatarScale']?.toDouble() ?? 1.0;
+    ss.settings.gifApiKey.value = map['gifApiKey'] ?? '';
     ss.settings.trustSelfSignedCerts.value = map['trustSelfSignedCerts'] ?? false;
     ss.settings.launchAtStartup.value = map['launchAtStartup'] ?? false;
     ss.settings.launchAtStartupMinimized.value = map['launchAtStartupMinimized'] ?? false;
@@ -562,6 +565,7 @@ class Settings {
     s.guidAuthKey.value = map['guidAuthKey'] ?? "";
     s.serverAddress.value = map['serverAddress'] ?? "";
     s.customHeaders.value = _processCustomHeaders(map['customHeaders']);
+    s.gifApiKey.value = map['gifApiKey'] ?? "";
     s.trustSelfSignedCerts.value = map['trustSelfSignedCerts'] ?? false;
     s.finishedSetup.value = map['finishedSetup'] ?? false;
     s.autoDownload.value = map['autoDownload'] ?? true;

@@ -26,6 +26,57 @@ class _AttachmentPanelState extends OptimizedState<AttachmentPanel> {
           SliverList(
             delegate: SliverChildListDelegate(
               <Widget>[
+                SettingsHeader(
+                    iosSubtitle: iosSubtitle,
+                    materialSubtitle: materialSubtitle,
+                    text: "GIF Search"),
+                SettingsSection(
+                  backgroundColor: tileColor,
+                  children: [
+                    Obx(() => SettingsTile(
+                          title: "GIF API Key",
+                          subtitle: ss.settings.gifApiKey.value.isEmpty
+                              ? "Not set"
+                              : ss.settings.gifApiKey.value,
+                          backgroundColor: tileColor,
+                          onTap: () async {
+                            final controller =
+                                TextEditingController(text: ss.settings.gifApiKey.value);
+                            await showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                backgroundColor: context.theme.colorScheme.properSurface,
+                                title: Text("Enter GIF API Key",
+                                    style: context.theme.textTheme.titleLarge),
+                                content: TextField(
+                                  controller: controller,
+                                  decoration: const InputDecoration(
+                                      labelText: "API Key"),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    child: Text("Cancel",
+                                        style: context.theme.textTheme.bodyLarge!
+                                            .copyWith(color: context.theme.colorScheme.primary)),
+                                    onPressed: () => Get.back(),
+                                  ),
+                                  TextButton(
+                                    child: Text("OK",
+                                        style: context.theme.textTheme.bodyLarge!
+                                            .copyWith(color: context.theme.colorScheme.primary)),
+                                    onPressed: () {
+                                      ss.settings.gifApiKey.value = controller.text.trim();
+                                      saveSettings();
+                                      Get.back();
+                                    },
+                                  )
+                                ],
+                              ),
+                            );
+                          },
+                        )),
+                  ],
+                ),
                 SettingsSection(
                   backgroundColor: tileColor,
                   children: [

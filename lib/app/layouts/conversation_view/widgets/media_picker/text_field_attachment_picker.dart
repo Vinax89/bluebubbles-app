@@ -34,6 +34,8 @@ class AttachmentPicker extends StatefulWidget {
 
 class _AttachmentPickerState extends OptimizedState<AttachmentPicker> {
   List<AssetEntity> _images = <AssetEntity>[];
+  List<GifResult> _gifResults = <GifResult>[];
+  final TextEditingController _gifSearch = TextEditingController();
 
   ConversationViewController get controller => widget.controller;
 
@@ -41,6 +43,12 @@ class _AttachmentPickerState extends OptimizedState<AttachmentPicker> {
   void initState() {
     super.initState();
     getAttachments();
+  }
+
+  @override
+  void dispose() {
+    _gifSearch.dispose();
+    super.dispose();
   }
 
   Future<void> getAttachments() async {
@@ -69,6 +77,15 @@ class _AttachmentPickerState extends OptimizedState<AttachmentPicker> {
       }
     }
     setState(() {});
+  }
+
+  Future<void> _searchGifs(String query) async {
+    if (query.isEmpty) {
+      setState(() => _gifResults = []);
+      return;
+    }
+    final results = await gifService.search(query);
+    setState(() => _gifResults = results);
   }
 
   Future<void> openFullCamera({String type = 'camera'}) async {
@@ -150,30 +167,27 @@ class _AttachmentPickerState extends OptimizedState<AttachmentPicker> {
     return "";
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
-      child: RefreshIndicator(
-        onRefresh: () async {
-          getAttachments();
+  Widget _buildMediaTab(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        getAttachments();
+      },
+      child: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (OverscrollIndicatorNotification overscroll) {
+          // prevent stretchy effect
+          overscroll.disallowIndicator();
+          return true;
         },
-        child: NotificationListener<OverscrollIndicatorNotification>(
-          onNotification: (OverscrollIndicatorNotification overscroll) {
-            // prevent stretchy effect
-            overscroll.disallowIndicator();
-            return true;
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: SizedBox(
-              height: 300,
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: CustomScrollView(
-                  physics: ThemeSwitcher.getScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  slivers: <Widget>[
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: 300,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: CustomScrollView(
+                physics: ThemeSwitcher.getScrollPhysics(),
+                scrollDirection: Axis.horizontal,
+                slivers: <Widget>[
                     SliverGrid(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -419,6 +433,82 @@ class _AttachmentPickerState extends OptimizedState<AttachmentPicker> {
               ),
             )
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGifTab(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _gifSearch,
+            decoration: const InputDecoration(
+              labelText: 'Search GIFs',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: _searchGifs,
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(8.0),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 4,
+              mainAxisSpacing: 4,
+            ),
+            itemCount: _gifResults.length,
+            itemBuilder: (context, index) {
+              final gif = _gifResults[index];
+              return GestureDetector(
+                onTap: () async {
+                  final response = await http.downloadFromUrl(gif.url);
+                  if (response.statusCode == 200) {
+                    final data = response.data;
+                    controller.pickedAttachments.add(PlatformFile(
+                      path: null,
+                      name: 'gif-${randomString(6)}.gif',
+                      size: data.length,
+                      bytes: data,
+                    ));
+                  }
+                },
+                child: Image.network(gif.previewUrl, fit: BoxFit.cover),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 300,
+      child: DefaultTabController(
+        length: 2,
+        child: Column(
+          children: [
+            TabBar(
+              labelColor: context.theme.colorScheme.properOnSurface,
+              tabs: const [
+                Tab(text: 'Media'),
+                Tab(text: 'GIFs'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _buildMediaTab(context),
+                  _buildGifTab(context),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
