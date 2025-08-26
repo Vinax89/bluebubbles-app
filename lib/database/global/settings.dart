@@ -155,6 +155,7 @@ class Settings {
   final RxBool closeToTray = true.obs;
   final RxBool spellcheck = true.obs;
   final RxString spellcheckLanguage = "auto".obs;
+  final RxString translateLanguage = "en".obs;
   final Rx<WindowEffect> windowEffect = WindowEffect.disabled.obs;
   final RxDouble windowEffectCustomOpacityLight = 0.5.obs;
   final RxDouble windowEffectCustomOpacityDark = 0.5.obs;
@@ -335,6 +336,7 @@ class Settings {
       'closeToTray': closeToTray.value,
       'spellcheck': spellcheck.value,
       'spellcheckLanguage': spellcheckLanguage.value,
+      'translateLanguage': translateLanguage.value,
       'minimizeToTray': minimizeToTray.value,
       'selectedActionIndices': selectedActionIndices,
       'actionList': actionList,
@@ -473,6 +475,7 @@ class Settings {
     ss.settings.closeToTray.value = map['closeToTray'] ?? true;
     ss.settings.spellcheck.value = map['spellcheck'] ?? true;
     ss.settings.spellcheckLanguage.value = map['spellcheckLanguage'] ?? 'auto';
+    ss.settings.translateLanguage.value = map['translateLanguage'] ?? 'en';
     ss.settings.minimizeToTray.value = map['minimizeToTray'] ?? false;
     ss.settings.askWhereToSave.value = map['askWhereToSave'] ?? false;
     ss.settings.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
@@ -618,6 +621,7 @@ class Settings {
     s.closeToTray.value = map['closeToTray'] ?? true;
     s.spellcheck.value = map['spellcheck'] ?? true;
     s.spellcheckLanguage.value = map['spellcheckLanguage'] ?? 'auto';
+    s.translateLanguage.value = map['translateLanguage'] ?? 'en';
     s.minimizeToTray.value = map['minimizeToTray'] ?? false;
     s.askWhereToSave.value = map['askWhereToSave'] ?? false;
     s.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;

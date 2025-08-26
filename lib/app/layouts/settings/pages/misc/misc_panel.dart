@@ -333,6 +333,20 @@ class _MiscPanelState extends OptimizedState<MiscPanel> {
                     ) : const SizedBox.shrink()),
                   if (kIsDesktop || kIsWeb)
                     const SettingsDivider(),
+                  SettingsOptions<(String, String)>(
+                    useCupertino: false,
+                    onChanged: (val) {
+                      if (val == null) return;
+                      ss.settings.translateLanguage.value = val.$2;
+                      saveSettings();
+                    },
+                    initial: languageNameAndCodes.firstWhereOrNull((l) => l.$2 == ss.settings.translateLanguage.value) ?? ("English", "en"),
+                    options: languageNameAndCodes,
+                    title: 'Default Translation Language',
+                    textProcessing: (val) => val.$1,
+                    capitalize: false,
+                  ),
+                  const SettingsDivider(),
                   Obx(() => SettingsSwitch(
                         onChanged: (bool val) {
                           ss.settings.sendDelay.value = val ? 3 : 0;

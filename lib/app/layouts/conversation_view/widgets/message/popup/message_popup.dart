@@ -482,6 +482,42 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
     );
   }
 
+  Future<void> translate() async {
+    final text = part.fullText;
+    if (text == null || text.isEmpty) return;
+
+    MessageSummaryInfo info = message.messageSummaryInfo.isNotEmpty
+        ? message.messageSummaryInfo.first
+        : MessageSummaryInfo(
+            retractedParts: [],
+            editedContent: {},
+            originalTextRange: {},
+            editedParts: [],
+          );
+    if (message.messageSummaryInfo.isEmpty) {
+      message.messageSummaryInfo.add(info);
+    }
+
+    final target = ss.settings.translateLanguage.value;
+    info.translations ??= {};
+    String? translated = info.translations![target];
+    translated ??= await translationService.translate(text, target);
+    info.translations![target] = translated;
+    message.save();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.theme.colorScheme.properSurface,
+        title: Text('Translation', style: context.theme.textTheme.titleLarge),
+        content: SelectableText(
+          translated,
+          style: context.theme.textTheme.bodyLarge,
+        ),
+      ),
+    );
+  }
+
   Future<void> downloadOriginal() async {
     final RxBool downloadingAttachments = true.obs;
     final RxnDouble progress = RxnDouble();
@@ -879,6 +915,11 @@ class _MessagePopupState extends OptimizedState<MessagePopup> with SingleTickerP
           DetailsMenuActionWidget(
             onTap: copyText,
             action: DetailsMenuAction.CopyText,
+          ),
+        if (!isNullOrEmptyString(part.fullText))
+          DetailsMenuActionWidget(
+            onTap: translate,
+            action: DetailsMenuAction.Translate,
           ),
         if (showDownload &&
             supportsOriginalDownload &&
