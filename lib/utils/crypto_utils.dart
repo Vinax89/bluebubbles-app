@@ -2,68 +2,54 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
-import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:pointycastle/export.dart';
 import 'package:tuple/tuple.dart';
 
-String encryptAESCryptoJS(String plainText, String passphrase) {
+String encryptAES(String plainText, String passphrase) {
   try {
-    final salt = genRandomWithNonZero(8);
+    final salt = genRandomWithNonZero(16);
     var keyndIV = deriveKeyAndIV(passphrase, salt);
-    final key = encrypt.Key(keyndIV.item1);
-    final iv = encrypt.IV(keyndIV.item2);
+    final key = keyndIV.item1;
+    final iv = keyndIV.item2.sublist(0, 12);
 
-    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc, padding: "PKCS7"));
-    final encrypted = encrypter.encrypt(plainText, iv: iv);
+    final cipher = GCMBlockCipher(AESEngine());
+    cipher.init(true, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
+    final encrypted = cipher.process(Uint8List.fromList(utf8.encode(plainText)));
     Uint8List encryptedBytesWithSalt =
-        Uint8List.fromList(createUint8ListFromString("Salted__") + salt + encrypted.bytes);
+        Uint8List.fromList(createUint8ListFromString("Salted__") + salt + encrypted);
     return base64.encode(encryptedBytesWithSalt);
   } catch (error) {
     rethrow;
   }
 }
 
-String decryptAESCryptoJS(String encrypted, String passphrase) {
+String decryptAES(String encrypted, String passphrase) {
   try {
     Uint8List encryptedBytesWithSalt = base64.decode(encrypted);
 
-    Uint8List encryptedBytes = encryptedBytesWithSalt.sublist(16, encryptedBytesWithSalt.length);
-    final salt = encryptedBytesWithSalt.sublist(8, 16);
+    Uint8List encryptedBytes = encryptedBytesWithSalt.sublist(24, encryptedBytesWithSalt.length);
+    final salt = encryptedBytesWithSalt.sublist(8, 24);
     var keyndIV = deriveKeyAndIV(passphrase, salt);
-    final key = encrypt.Key(keyndIV.item1);
-    final iv = encrypt.IV(keyndIV.item2);
+    final key = keyndIV.item1;
+    final iv = keyndIV.item2.sublist(0, 12);
 
-    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc, padding: "PKCS7"));
-    final decrypted = encrypter.decrypt64(base64.encode(encryptedBytes), iv: iv);
-    return decrypted;
+    final cipher = GCMBlockCipher(AESEngine());
+    cipher.init(false, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
+    final decrypted = cipher.process(encryptedBytes);
+    return utf8.decode(decrypted);
   } catch (error) {
     rethrow;
   }
 }
 
 Tuple2<Uint8List, Uint8List> deriveKeyAndIV(String passphrase, Uint8List salt) {
-  var password = createUint8ListFromString(passphrase);
-  Uint8List concatenatedHashes = Uint8List(0);
-  Uint8List currentHash = Uint8List(0);
-  bool enoughBytesForKey = false;
-  Uint8List preHash = Uint8List(0);
-
-  while (!enoughBytesForKey) {
-    // int preHashLength = currentHash.length + password.length + salt.length;
-    if (currentHash.isNotEmpty) {
-      preHash = Uint8List.fromList(currentHash + password + salt);
-    } else {
-      preHash = Uint8List.fromList(password + salt);
-    }
-
-    currentHash = md5.convert(preHash).bytes as Uint8List;
-    concatenatedHashes = Uint8List.fromList(concatenatedHashes + currentHash);
-    if (concatenatedHashes.length >= 48) enoughBytesForKey = true;
-  }
-
-  var keyBtyes = concatenatedHashes.sublist(0, 32);
-  var ivBtyes = concatenatedHashes.sublist(32, 48);
-  return Tuple2(keyBtyes, ivBtyes);
+  final derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64));
+  final params = Pbkdf2Parameters(salt, 100000, 48);
+  derivator.init(params);
+  final key = derivator.process(Uint8List.fromList(utf8.encode(passphrase)));
+  var keyBytes = key.sublist(0, 32);
+  var ivBytes = key.sublist(32, 48);
+  return Tuple2(keyBytes, ivBytes);
 }
 
 Uint8List createUint8ListFromString(String s) {
