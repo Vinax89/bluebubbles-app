@@ -60,9 +60,9 @@ class HttpService extends GetxService {
   }
 
   Map<String, String> get headers {
-    if (ss.settings.serverAddress.contains('ngrok')) {
+    if (ss.settings.serverAddress.value.contains('ngrok')) {
       ss.settings.customHeaders.addAll({'ngrok-skip-browser-warning': 'true'});
-    } else if (ss.settings.serverAddress.contains('zrok')) {
+    } else if (ss.settings.serverAddress.value.contains('zrok')) {
       ss.settings.customHeaders.addAll({'skip_zrok_interstitial': 'true'});
     }
 
