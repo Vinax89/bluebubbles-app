@@ -5,6 +5,7 @@ import 'package:bluebubbles/app/layouts/conversation_view/widgets/message/popup/
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
@@ -75,7 +76,9 @@ class Settings {
   final RxBool askWhereToSave = false.obs;
   final RxBool statusIndicatorsOnChats = false.obs;
   final RxInt apiTimeout = 30000.obs;
-  final RxBool simulateServerDelay = false.obs;
+  /// Adds an artificial delay to API requests for debugging network behavior.
+  /// Defaults to `true` in debug builds and `false` in release builds.
+  final RxBool simulateServerDelay = kDebugMode.obs;
   final RxBool chaosMode = false.obs;
   final RxBool stressMode = false.obs;
   final RxBool allowUpsideDownRotation = false.obs;
@@ -482,7 +485,7 @@ class Settings {
     ss.settings.askWhereToSave.value = map['askWhereToSave'] ?? false;
     ss.settings.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     ss.settings.apiTimeout.value = map['apiTimeout'] ?? 15000;
-    ss.settings.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
+    ss.settings.simulateServerDelay.value = map['simulateServerDelay'] ?? kDebugMode;
     ss.settings.chaosMode.value = map['chaosMode'] ?? false;
     ss.settings.stressMode.value = map['stressMode'] ?? false;
     ss.settings.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;
@@ -629,7 +632,7 @@ class Settings {
     s.askWhereToSave.value = map['askWhereToSave'] ?? false;
     s.statusIndicatorsOnChats.value = map['indicatorsOnPinnedChats'] ?? false;
     s.apiTimeout.value = map['apiTimeout'] ?? 15000;
-    s.simulateServerDelay.value = map['simulateServerDelay'] ?? false;
+    s.simulateServerDelay.value = map['simulateServerDelay'] ?? kDebugMode;
     s.chaosMode.value = map['chaosMode'] ?? false;
     s.stressMode.value = map['stressMode'] ?? false;
     s.allowUpsideDownRotation.value = map['allowUpsideDownRotation'] ?? false;

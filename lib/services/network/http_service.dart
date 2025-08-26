@@ -37,7 +37,9 @@ class HttpService extends GetxService {
     Duration? delay,
   }) async {
     // Simulate slow server responses when enabled in settings or when a delay is provided
-    if (ss.settings.simulateServerDelay.value || delay != null) {
+    // This is wrapped in [kDebugMode] so that release builds are never artificially
+    // delayed, even if the setting is enabled or a delay is passed.
+    if (kDebugMode && (ss.settings.simulateServerDelay.value || delay != null)) {
       await Future.delayed(delay ?? const Duration(seconds: 2));
     }
 
