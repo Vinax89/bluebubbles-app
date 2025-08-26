@@ -462,7 +462,11 @@ class ActionHandler extends GetxService {
       await cs.init();
     }
     // get and return the chat from server
-    return await cm.fetchChat(partialData.guid) ?? partialData;
+    Chat chat = await cm.fetchChat(partialData.guid) ?? partialData;
+    if (chat.guid != null && !ss.settings.chatKeys.containsKey(chat.guid!)) {
+      ss.rotateChatKey(chat.guid!);
+    }
+    return chat;
   }
 
   Future<void> handleFaceTimeStatusChange(Map<String, dynamic> data) async {
@@ -562,6 +566,9 @@ class ActionHandler extends GetxService {
         try {
           final item = IncomingItem.fromMap(QueueType.updatedMessage, data);
           ah.handleNewOrUpdatedChat(item.chat);
+          if (item.chat.guid != null) {
+            ss.rotateChatKey(item.chat.guid!);
+          }
         } catch (_) {}
         return;
       case "chat-read-status-changed":

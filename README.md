@@ -15,6 +15,7 @@ Key Features:
 - Choose between an iOS or Android-style interface
 - Lots of customizations and options to personalize your experience
 - Full cross-platform support - message across Android, Linux, Windows, the Web, and even macOS!
+- Per-chat encrypted payloads with secure key exchange
 
 Private API Features:
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:bluebubbles/app/layouts/settings/pages/advanced/private_api_panel.dart';
@@ -8,6 +9,7 @@ import 'package:bluebubbles/app/wrappers/theme_switcher.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/utils/crypto_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -140,6 +142,22 @@ class SettingsService extends GetxService {
   Future<void> saveFCMData(FCMData data) async {
     fcmData = data;
     await fcmData.save(wait: true);
+  }
+
+  String getChatKey(String chatGuid) {
+    if (settings.chatKeys.containsKey(chatGuid)) {
+      return settings.chatKeys[chatGuid]!;
+    }
+    final key = base64Encode(genRandomWithNonZero(32));
+    settings.chatKeys[chatGuid] = key;
+    settings.saveOne('chatKeys');
+    return key;
+  }
+
+  void rotateChatKey(String chatGuid) {
+    final key = base64Encode(genRandomWithNonZero(32));
+    settings.chatKeys[chatGuid] = key;
+    settings.saveOne('chatKeys');
   }
 
   Future<Tuple4<int, int, String, int>> getServerDetails({bool refresh = false}) async {

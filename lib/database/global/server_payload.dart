@@ -52,7 +52,14 @@ class ServerPayload {
   }) {
     if (isEncrypted) {
       if (encryptionType == EncryptionType.AES_PB) {
-        data = decryptAES(data, ss.settings.guidAuthKey.value);
+        String? chatGuid;
+        if (originalJson is Map) {
+          chatGuid = originalJson['chatGuid'] ?? originalJson['chat']?['guid'];
+        }
+        final key = chatGuid != null && ss.settings.chatKeys.containsKey(chatGuid)
+            ? ss.settings.chatKeys[chatGuid]!
+            : ss.settings.guidAuthKey.value;
+        data = decryptAES(data, key);
       }
     }
     if ([PayloadEncoding.JSON_OBJECT, PayloadEncoding.JSON_STRING].contains(encoding) && data is String) {
