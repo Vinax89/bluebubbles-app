@@ -4,6 +4,7 @@ import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/app/layouts/settings/widgets/settings_widgets.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
+import 'package:bluebubbles/services/backup_service.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:bluebubbles/utils/share.dart';
@@ -35,10 +36,12 @@ class _BackupRestorePanelState extends OptimizedState<BackupRestorePanel> {
   List<Map<String, dynamic>> settings = [];
   List<Map<String, dynamic>> themes = [];
   bool? fetching = true;
+  bool periodicBackups = false;
 
   @override
   void initState() {
     super.initState();
+    periodicBackups = ss.prefs.getBool('periodic-backups') ?? false;
     getBackups();
   }
 
@@ -165,6 +168,49 @@ class _BackupRestorePanelState extends OptimizedState<BackupRestorePanel> {
         bodySlivers: [
           SliverList(
             delegate: SliverChildListDelegate([
+              SettingsSection(
+                backgroundColor: tileColor,
+                children: [
+                  SettingsTile(
+                    backgroundColor: tileColor,
+                    title: 'Back Up Now',
+                    subtitle: 'Encrypt data and upload to Google Drive',
+                    leading: const SettingsLeadingIcon(
+                      iosIcon: CupertinoIcons.cloud_upload,
+                      materialIcon: Icons.cloud_upload,
+                      containerColor: Colors.blue,
+                    ),
+                    onTap: () async {
+                      try {
+                        final file = await BackupService.createEncryptedBackup(password: 'backup');
+                        await BackupService.uploadBackup(file, CloudProvider.googleDrive);
+                        showSnackbar('Success', 'Backup created');
+                      } catch (e) {
+                        showSnackbar('Error', e.toString());
+                      }
+                    },
+                  ),
+                  SettingsSwitch(
+                    backgroundColor: tileColor,
+                    initialVal: periodicBackups,
+                    title: 'Periodic Backups',
+                    subtitle: 'Automatically back up once per day',
+                    onChanged: (val) {
+                      setState(() => periodicBackups = val);
+                      ss.prefs.setBool('periodic-backups', val);
+                      if (val) {
+                        BackupService.schedulePeriodicBackups(
+                          const Duration(days: 1),
+                          password: 'backup',
+                          provider: CloudProvider.googleDrive,
+                        );
+                      } else {
+                        BackupService.cancelPeriodicBackups();
+                      }
+                    },
+                  ),
+                ],
+              ),
               if (fetching == null || fetching == true)
                 Center(
                   child: Padding(

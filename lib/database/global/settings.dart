@@ -433,6 +433,12 @@ class Settings {
     return map;
   }
 
+  /// Convenience method to encode this [Settings] object as a JSON string.
+  String toJson({bool includeAll = false}) => jsonEncode(toMap(includeAll: includeAll));
+
+  /// Constructs a [Settings] instance from a JSON string created by [toJson].
+  static Settings fromJson(String data) => Settings.fromMap(jsonDecode(data));
+
   static void updateFromMap(Map<String, dynamic> map) {
     ss.settings.autoDownload.value = map['autoDownload'] ?? true;
     ss.settings.onlyWifiDownload.value = map['onlyWifiDownload'] ?? false;
