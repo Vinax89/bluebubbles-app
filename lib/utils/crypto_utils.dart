@@ -53,11 +53,7 @@ Tuple2<Uint8List, Uint8List> deriveKeyAndIV(String passphrase, Uint8List salt) {
 }
 
 Uint8List createUint8ListFromString(String s) {
-  var ret = Uint8List(s.length);
-  for (var i = 0; i < s.length; i++) {
-    ret[i] = s.codeUnitAt(i);
-  }
-  return ret;
+  return Uint8List.fromList(s.codeUnits);
 }
 
 Uint8List genRandomWithNonZero(int seedLength) {
