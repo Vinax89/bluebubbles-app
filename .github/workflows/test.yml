@@ -34,5 +34,5 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Run integration-tagged tests
-        run: flutter test --tags integration --dart-define=ENABLE_FLOOD_TEST=true
+      - name: Run tests
+        run: flutter test
