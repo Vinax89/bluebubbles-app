@@ -75,6 +75,8 @@ class _MessageHolderState extends CustomState<MessageHolder, void, MessageWidget
       || (olderMessage == null || !message.dateCreated!.isWithin(olderMessage!.dateCreated!, minutes: 30)));
   bool get showAvatar => chat.isGroup;
   bool isEditing(int part) => message.isFromMe! && widget.cvController.editing.firstWhereOrNull((e2) => e2.item1.guid == message.guid! && e2.item2.part == part) != null;
+  // ignore: unused_element
+  bool get canLongPressEdit => message.isFromMe!;
 
   List<MessagePart> messageParts = [];
   List<RxDouble> replyOffsets = [];
