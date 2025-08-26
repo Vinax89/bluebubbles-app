@@ -6,6 +6,7 @@ import 'package:bluebubbles/app/components/custom_text_editing_controllers.dart'
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/database/models.dart';
 import 'package:bluebubbles/services/services.dart';
+import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:emojis/emoji.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -201,7 +202,12 @@ class ConversationViewController extends StatefulController with GetSingleTicker
         tmpData = file.bytes;
       }
     } else if (attachment.canCompress) {
-      tmpData = await as.loadAndGetProperties(attachment, actualPath: file.path!);
+      if (await isHighSpeedConnection()) {
+        tmpData = await File(file.path!).readAsBytes();
+        await as.loadDimensions(attachment, filePath: file.path!, data: tmpData);
+      } else {
+        tmpData = await as.loadAndGetProperties(attachment, actualPath: file.path!);
+      }
       // All other attachments can be held in memory as bytes
     } else {
       tmpData = await File(file.path!).readAsBytes();

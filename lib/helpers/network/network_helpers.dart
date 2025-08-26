@@ -3,6 +3,7 @@ import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_io/io.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Take the passed [address] or serverAddress from Settings
 /// and sanitize it, ensuring it includes an HTTP or HTTPS scheme.
@@ -60,4 +61,14 @@ Future<String> getDeviceName() async {
   }
 
   return deviceName;
+}
+
+Future<bool> isHighSpeedConnection() async {
+  try {
+    final results = await Connectivity().checkConnectivity();
+    return results.contains(ConnectivityResult.wifi) ||
+        results.contains(ConnectivityResult.ethernet);
+  } catch (_) {
+    return false;
+  }
 }

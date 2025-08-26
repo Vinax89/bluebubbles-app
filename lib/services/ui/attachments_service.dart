@@ -314,6 +314,36 @@ class AttachmentsService extends GetxService {
     return thumbnail;
   }
 
+  Future<void> loadDimensions(Attachment attachment, {String? filePath, Uint8List? data}) async {
+    if (attachment.width != null && attachment.height != null) return;
+    final path = filePath ?? attachment.path;
+
+    if (attachment.mimeType == "image/gif") {
+      try {
+        final bytes = data ?? await File(path).readAsBytes();
+        Size size = getGifDimensions(bytes);
+        if (size.width != 0 && size.height != 0) {
+          attachment.width = size.width.toInt();
+          attachment.height = size.height.toInt();
+          attachment.save(null);
+        }
+      } catch (ex, stack) {
+        Logger.error('Failed to get GIF dimensions!', error: ex, trace: stack);
+      }
+    } else if (attachment.mimeStart == "image") {
+      try {
+        Size size = await getImageSizing(path, attachment);
+        if (size.width != 0 && size.height != 0) {
+          attachment.width = size.width.toInt();
+          attachment.height = size.height.toInt();
+          attachment.save(null);
+        }
+      } catch (ex, stack) {
+        Logger.error('Failed to get Image Properties!', error: ex, trace: stack);
+      }
+    }
+  }
+
   Future<Uint8List?> loadAndGetProperties(Attachment attachment, {bool onlyFetchData = false, String? actualPath, bool isPreview = false}) async {
     if (kIsWeb || attachment.mimeType == null || !["image", "video"].contains(attachment.mimeStart)) return null;
 
@@ -385,32 +415,7 @@ class AttachmentsService extends GetxService {
     }
 
     Uint8List previewData = await originalFile.readAsBytes();
-
-    if (attachment.width != null || attachment.height != null) {
-      if (attachment.mimeType == "image/gif") {
-        try {
-          Size size = getGifDimensions(previewData);
-          if (size.width != 0 && size.height != 0) {
-            attachment.width = size.width.toInt();
-            attachment.height = size.height.toInt();
-          }
-          attachment.save(null);
-        } catch (ex, stack) {
-          Logger.error('Failed to get GIF dimensions!', error: ex, trace: stack);
-        }
-      } else if (attachment.mimeStart == "image") {
-        try {
-          Size size = await getImageSizing(filePath, attachment);
-          if (size.width != 0 && size.height != 0) {
-            attachment.width = size.width.toInt();
-            attachment.height = size.height.toInt();
-          }
-          attachment.save(null);
-        } catch (ex, stack) {
-          Logger.error('Failed to get Image Properties!', error: ex, trace: stack);
-        }
-      }
-    }
+    await loadDimensions(attachment, filePath: filePath, data: previewData);
 
     if (attachment.metadata != null) {
       // Map the EXIF to the metadata
