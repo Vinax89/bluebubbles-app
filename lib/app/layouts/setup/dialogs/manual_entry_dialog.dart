@@ -213,7 +213,7 @@ class _ManualEntryDialogState extends OptimizedState<ManualEntryDialog> {
             if (mounted) {
               setState(() {
                 error =
-                "Failed to connect to ${sanitizeServerAddress()}! Please check that the url is correct (including http://) and the server logs for more info.";
+                "Failed to connect to ${sanitizeServerAddress()}! Please check that the url is correct (including the protocol) and the server logs for more info.";
               });
             }
           }

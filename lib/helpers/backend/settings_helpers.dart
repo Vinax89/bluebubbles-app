@@ -1,5 +1,6 @@
 import 'package:bluebubbles/helpers/backend/foreground_service_helpers.dart';
 import 'package:bluebubbles/helpers/network/network_helpers.dart';
+import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:disable_battery_optimization/disable_battery_optimization.dart';
@@ -39,6 +40,10 @@ Future<bool> saveNewServerUrl(
 
   if (force || addressChanged || flagsChanged) {
     ss.settings.serverAddress.value = sanitized;
+
+    if (Uri.tryParse(sanitized)?.scheme == 'http') {
+      showSnackbar('Warning', 'HTTP URLs are not secure. Consider using HTTPS.');
+    }
 
     await ss.settings.saveMany(saveKeys);
 
