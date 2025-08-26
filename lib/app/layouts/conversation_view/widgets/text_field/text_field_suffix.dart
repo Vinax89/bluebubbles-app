@@ -182,22 +182,46 @@ class _TextFieldSuffixState extends OptimizedState<TextFieldSuffix> {
                   }
                 },
               ),
-              secondChild: SendButton(
-                sendMessage: widget.sendMessage,
-                onLongPress: isChatCreator ? () {} : () {
-                  if (widget.controller!.scheduledDate.value != null) return;
-                  sendEffectAction(
-                    context,
-                    widget.controller!,
-                    widget.textController.text.trim(),
-                    widget.subjectTextController.text.trim(),
-                    widget.controller!.replyToMessage?.item1.guid,
-                    widget.controller!.replyToMessage?.item2,
-                    widget.controller!.chat.guid,
-                    widget.sendMessage,
-                    widget.textController is MentionTextEditingController ? (widget.textController as MentionTextEditingController).mentionables : [],
-                  );
-                },
+              secondChild: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      iOS ? CupertinoIcons.clock : Icons.schedule,
+                      size: 20,
+                      color: iOS ? context.theme.colorScheme.outline : context.theme.colorScheme.properOnSurface,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+                    onPressed: () async {
+                      final date = await showTimeframePicker("Pick date and time", context, presetsAhead: true);
+                      if (date != null && date.isAfter(DateTime.now())) {
+                        widget.controller!.scheduledDate.value = date;
+                      }
+                    },
+                  ),
+                  SendButton(
+                    sendMessage: widget.sendMessage,
+                    onLongPress: isChatCreator
+                        ? () {}
+                        : () {
+                            if (widget.controller!.scheduledDate.value != null) return;
+                            sendEffectAction(
+                              context,
+                              widget.controller!,
+                              widget.textController.text.trim(),
+                              widget.subjectTextController.text.trim(),
+                              widget.controller!.replyToMessage?.item1.guid,
+                              widget.controller!.replyToMessage?.item2,
+                              widget.controller!.chat.guid,
+                              widget.sendMessage,
+                              widget.textController is MentionTextEditingController
+                                  ? (widget.textController as MentionTextEditingController).mentionables
+                                  : [],
+                            );
+                          },
+                  ),
+                ],
               ),
             ),
           );

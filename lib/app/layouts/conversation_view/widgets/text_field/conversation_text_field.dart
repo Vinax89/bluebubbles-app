@@ -14,6 +14,7 @@ import 'package:bluebubbles/app/components/voice/voice_recorder.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
 import 'package:bluebubbles/database/models.dart';
+import 'package:bluebubbles/database/database.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/emoji.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
@@ -382,36 +383,9 @@ class ConversationTextFieldState extends CustomState<ConversationTextField, void
       if (text.contains(MentionTextEditingController.escapingChar)) {
         return showSnackbar("Error", "Mentions are not allowed in scheduled messages!");
       }
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: context.theme.colorScheme.properSurface,
-            title: Text(
-              "Scheduling message...",
-              style: context.theme.textTheme.titleLarge,
-            ),
-            content: Container(
-              height: 70,
-              child: Center(
-                child: CircularProgressIndicator(
-                  backgroundColor: context.theme.colorScheme.properSurface,
-                  valueColor: AlwaysStoppedAnimation<Color>(context.theme.colorScheme.primary),
-                ),
-              ),
-            ),
-          );
-        },
-      );
-      final response = await http.createScheduled(chat.guid, text, date.toUtc(), {"type": "once"});
-      Navigator.of(context).pop();
-      if (response.statusCode == 200 && response.data != null) {
-        showSnackbar("Notice", "Message scheduled successfully for ${buildFullDate(date)}");
-      } else {
-        Logger.error("Scheduled message error: ${response.statusCode}");
-        Logger.error(response.data);
-        showSnackbar("Error", "Something went wrong!");
-      }
+      await Database.saveScheduledDraft(chat.guid, text, date);
+      socket.scheduleMessage(chat.guid, text, date);
+      showSnackbar("Notice", "Message scheduled successfully for ${buildFullDate(date)}");
     } else {
       if (text.isEmpty && controller.subjectTextController.text.isEmpty && !ss.settings.privateAPIAttachmentSend.value) {
         if (controller.replyToMessage != null) {
