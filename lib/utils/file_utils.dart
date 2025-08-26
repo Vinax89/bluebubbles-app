@@ -21,7 +21,11 @@ Future<PlatformFile?> loadPathAsFile(String path) async {
 /// https://giflib.sourceforge.net/whatsinagif/animation_and_transparency.html
 Future<Uint8List> fixSpeedyGifs(Uint8List image) async {
   return await compute((image) {
-    for (int i = 0; i < image.length - 2; i++) {
+    // Ensure we always have enough bytes remaining to safely access
+    // [i + 4] and [i + 5]. The previous boundary check of
+    // `image.length - 2` could result in a RangeError when the pattern
+    // appeared near the end of the byte array.
+    for (int i = 0; i < image.length - 5; i++) {
       final slice = image.sublist(i, i + 3);
       if (const ListEquality().equals(slice, [0x21, 0xF9, 0x04])) {
         final delay1 = image[i + 4];
