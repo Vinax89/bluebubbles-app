@@ -1,17 +1,23 @@
+import 'dart:io';
+
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:bluebubbles/app/wrappers/stateful_boilerplate.dart';
 import 'package:bluebubbles/helpers/helpers.dart';
+import 'package:bluebubbles/helpers/ui/attributed_body_helpers.dart';
 // it does actually export (Web only)
 // ignore: undefined_hidden_name
 import 'package:bluebubbles/database/models.dart' hide PlayerState;
 import 'package:bluebubbles/services/services.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_mlkit_speech_to_text/google_mlkit_speech_to_text.dart';
 
 class AudioPlayer extends StatefulWidget {
   final PlatformFile file;
   final Attachment? attachment;
   final String? transcript;
+  final Message? message;
+  final int? part;
 
 
   AudioPlayer({
@@ -19,6 +25,8 @@ class AudioPlayer extends StatefulWidget {
     required this.file,
     required this.attachment,
     this.transcript,
+    this.message,
+    this.part,
     this.controller,
   });
 
@@ -42,12 +50,17 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
       vsync: this,
       duration: const Duration(milliseconds: 400),
       animationBehavior: AnimationBehavior.preserve);
+  String? _transcript;
 
   @override
   void initState() {
     super.initState();
     if (attachment != null)
       controller = cvController?.audioPlayers[attachment!.guid];
+    _transcript = widget.transcript;
+    if (_transcript == null && ss.settings.enableAudioTranscription.value) {
+      _initTranscription();
+    }
     updateObx(() {
       initBytes();
     });
@@ -83,6 +96,37 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
         cvController?.audioPlayers[attachment!.guid!] = controller!;
     }
     setState(() {});
+  }
+
+  Future<void> _initTranscription() async {
+    try {
+      if (widget.message != null && widget.part != null) {
+        final cached =
+            getAudioTranscriptsFromAttributedBody(widget.message!.attributedBody)[widget.part!];
+        if (cached != null) {
+          setState(() => _transcript = cached);
+          return;
+        }
+      }
+      final recognizer = SpeechRecognizer();
+      final result = await recognizer.recognize(File(file.path!));
+      final text = result.text;
+      if (text.isNotEmpty) {
+        if (mounted) setState(() => _transcript = text);
+        _cacheTranscript(text);
+      }
+      recognizer.close();
+    } catch (_) {}
+  }
+
+  void _cacheTranscript(String text) {
+    if (widget.message == null || widget.part == null) return;
+    if (widget.message!.attributedBody.isEmpty) {
+      widget.message!.attributedBody = [AttributedBody(string: '', runs: [])];
+    }
+    widget.message!.attributedBody.first.runs.add(
+        Run(range: [0, 0], attributes: Attributes(messagePart: widget.part, audioTranscript: text)));
+    widget.message!.save();
   }
 
   @override
@@ -144,11 +188,11 @@ class _AudioPlayerState extends OptimizedState<AudioPlayer>
               ),
             ],
           ),
-          if (widget.transcript != null)
+          if (_transcript != null)
             Padding(
               padding: const EdgeInsets.only(top: 5, left: 10, right: 10, bottom: 5),
               child: Text(
-                "${widget.transcript}",
+                "$_transcript",
                 style: context.theme.textTheme.bodySmall,
               ),
             ),
@@ -219,45 +263,58 @@ class _DesktopAudioPlayerState extends OptimizedState<AudioPlayer>
     super.build(context);
     return Padding(
         padding: const EdgeInsets.all(5),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              onPressed: () async {
-                if (controller == null) return;
-                if (controller!.state.playing) {
-                  animController.reverse();
-                  await controller!.pause();
-                } else {
-                  animController.forward();
-                  await controller!.play();
-                }
-                setState(() {});
-              },
-              icon: AnimatedIcon(
-                icon: AnimatedIcons.play_pause,
-                progress: animController,
-              ),
-              color: context.theme.colorScheme.properOnSurface,
-              visualDensity: VisualDensity.compact,
-            ),
-            if (controller != null)
-              SizedBox(
-                height: 30,
-                child: Slider(
-                  value: controller!.state.position.inSeconds.toDouble(),
-                  onChanged: (double value) {
-                    controller!.seek(Duration(seconds: value.toInt()));
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () async {
+                    if (controller == null) return;
+                    if (controller!.state.playing) {
+                      animController.reverse();
+                      await controller!.pause();
+                    } else {
+                      animController.forward();
+                      await controller!.play();
+                    }
+                    setState(() {});
                   },
-                  min: 0,
-                  max: controller!.state.duration.inSeconds.toDouble(),
+                  icon: AnimatedIcon(
+                    icon: AnimatedIcons.play_pause,
+                    progress: animController,
+                  ),
+                  color: context.theme.colorScheme.properOnSurface,
+                  visualDensity: VisualDensity.compact,
+                ),
+                if (controller != null)
+                  SizedBox(
+                    height: 30,
+                    child: Slider(
+                      value: controller!.state.position.inSeconds.toDouble(),
+                      onChanged: (double value) {
+                        controller!.seek(Duration(seconds: value.toInt()));
+                      },
+                      min: 0,
+                      max: controller!.state.duration.inSeconds.toDouble(),
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 16),
+                  child: Text(
+                      "${prettyDuration(controller?.state.position ?? Duration.zero)} / ${prettyDuration(controller?.state.duration ?? Duration.zero)}"),
+                )
+              ],
+            ),
+            if (widget.transcript != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 5, left: 10, right: 10, bottom: 5),
+                child: Text(
+                  "${widget.transcript}",
+                  style: context.theme.textTheme.bodySmall,
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(left: 10, right: 16),
-              child: Text(
-                  "${prettyDuration(controller?.state.position ?? Duration.zero)} / ${prettyDuration(controller?.state.duration ?? Duration.zero)}"),
-            )
           ],
         ));
   }

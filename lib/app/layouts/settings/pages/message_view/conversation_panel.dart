@@ -110,6 +110,20 @@ class _ConversationPanelState extends OptimizedState<ConversationPanel> {
                           backgroundColor: tileColor,
                           isThreeLine: true,
                         )),
+                  if (!kIsWeb && !kIsDesktop)
+                    const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
+                  if (!kIsWeb && !kIsDesktop)
+                    Obx(() => SettingsSwitch(
+                          onChanged: (bool val) {
+                            ss.settings.enableAudioTranscription.value = val;
+                            saveSettings();
+                          },
+                          initialVal: ss.settings.enableAudioTranscription.value,
+                          title: "On-Device Audio Transcription",
+                          subtitle: "Transcribe received audio messages locally",
+                          backgroundColor: tileColor,
+                          isThreeLine: true,
+                        )),
                   const SettingsDivider(padding: EdgeInsets.only(left: 16.0)),
                   Obx(() => SettingsSwitch(
                         onChanged: (bool val) {
