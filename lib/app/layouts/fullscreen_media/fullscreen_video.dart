@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video_controls/media_kit_video_controls.dart' as media_kit_video_controls;
 import 'package:universal_html/html.dart' as html;
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class FullscreenVideo extends StatefulWidget {
   FullscreenVideo({
@@ -46,6 +47,7 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
   final RxBool muted = ss.settings.startVideosMutedFullscreen.value.obs;
   final RxBool showPlayPauseOverlay = true.obs;
   final RxDouble aspectRatio = 1.0.obs;
+  bool wakelockEnabled = false;
 
   @override
   void initState() {
@@ -77,10 +79,21 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
       await videoController.player.open(media, play: false);
       await videoController.player.setVolume(muted.value ? 0 : 100);
     }
-    
+
     createListener(videoController);
     showPlayPauseOverlay.value = true;
+    await _setWakelock(videoController.player.state.playing);
     setState(() {});
+  }
+
+  Future<void> _setWakelock(bool enable) async {
+    if (enable && !wakelockEnabled) {
+      await WakelockPlus.enable();
+      wakelockEnabled = true;
+    } else if (!enable && wakelockEnabled) {
+      await WakelockPlus.disable();
+      wakelockEnabled = false;
+    }
   }
 
   void createListener(VideoController controller) {
@@ -90,12 +103,17 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
       aspectRatio.value = controller.aspectRatio;
     });
 
+    controller.player.stream.playing.listen((playing) {
+      _setWakelock(playing);
+    });
+
     controller.player.stream.completed.listen((completed) async {
       // If the status is ended, restart
       if (completed && !hasDisposed) {
         await controller.player.pause();
         await controller.player.seek(Duration.zero);
         await controller.player.pause();
+        await _setWakelock(false);
         showPlayPauseOverlay.value = true;
         showPlayPauseOverlay.refresh();
       }
@@ -108,7 +126,12 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
   void dispose() {
     hasDisposed = true;
     hideOverlayTimer?.cancel();
-    
+
+    if (wakelockEnabled) {
+      unawaited(WakelockPlus.disable());
+      wakelockEnabled = false;
+    }
+
     // Only dispose the player if one was not passed in (via a controller)
     if (widget.videoController == null) {
       videoController.player.dispose();
@@ -133,6 +156,7 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
       await videoController.player.open(media, play: false);
       await videoController.player.setVolume(muted.value ? 0 : 100);
       createListener(videoController);
+      await _setWakelock(false);
       showPlayPauseOverlay.value = !videoController.player.state.playing;
     });
   }
@@ -248,9 +272,11 @@ class _FullscreenVideoState extends OptimizedState<FullscreenVideo> with Automat
                                   onTap: () async {
                                     if (videoController.player.state.playing) {
                                       await videoController.player.pause();
+                                      await _setWakelock(false);
                                       showPlayPauseOverlay.value = true;
                                     } else {
                                       await videoController.player.play();
+                                      await _setWakelock(true);
                                       showPlayPauseOverlay.value = false;
                                     }
                                   },
