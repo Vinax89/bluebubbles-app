@@ -6,12 +6,14 @@ class MessageSummaryInfo {
     required this.editedContent,
     required this.originalTextRange,
     required this.editedParts,
-  });
+    Map<String, String>? translations,
+  }) : translations = translations ?? {};
 
   List<int> retractedParts;
   Map<String, List<EditedContent>> editedContent;
   Map<String, List<int>> originalTextRange;
   List<int> editedParts;
+  Map<String, String>? translations;
 
   factory MessageSummaryInfo.fromJson(Map<String, dynamic> json) => MessageSummaryInfo(
     retractedParts: json["retractedParts"]?.cast<int>() ?? json["rp"]?.cast<int>() ?? [],
@@ -26,6 +28,7 @@ class MessageSummaryInfo {
         ? {"0": List<int>.from(json["originalTextRange"])}
         : Map<String, List<int>>.from(json["originalTextRange"].map((k, v) => MapEntry(k.toString(), List<int>.from(v)))),
     editedParts: json["editedParts"]?.cast<int>() ?? [],
+    translations: json["translations"] == null ? null : Map<String, String>.from(json["translations"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -33,6 +36,7 @@ class MessageSummaryInfo {
     "editedContent": editedContent.map((k, v) => MapEntry(k, v.map((e) => e.toJson()).toList())),
     "originalTextRange": originalTextRange,
     "editedParts": editedParts,
+    if (translations != null && translations!.isNotEmpty) "translations": translations,
   };
 }
 
