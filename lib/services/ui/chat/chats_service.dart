@@ -80,28 +80,45 @@ class ChatsService extends GetxService {
     final newChats = <Chat>[];
     final batches = (currentCount < batchSize) ? batchSize : (currentCount / batchSize).ceil();
 
-    for (int i = 0; i < batches; i++) {
-      List<Chat> temp;
-      if (kIsWeb) {
-        temp = await cm.getChats(withLastMessage: true, limit: batchSize, offset: i * batchSize);
-      } else {
-        temp = await Chat.getChats(limit: batchSize, offset: i * batchSize);
-      }
+    // Collect futures for batch retrieval to allow concurrent fetching. Limit
+    // the number of concurrent operations to avoid overwhelming resources.
+    const maxConcurrent = 5;
+    final futures = <Future<List<Chat>>>[];
 
-      if (kIsWeb) {
-        webCachedHandles.addAll(temp.map((e) => e.participants).flattened.toList());
-        final ids = webCachedHandles.map((e) => e.address).toSet();
-        webCachedHandles.retainWhere((element) => ids.remove(element.address));
+    Future<void> processResults(List<List<Chat>> results) async {
+      for (final temp in results) {
+        if (kIsWeb) {
+          webCachedHandles.addAll(temp.map((e) => e.participants).flattened.toList());
+          final ids = webCachedHandles.map((e) => e.address).toSet();
+          webCachedHandles.retainWhere((element) => ids.remove(element.address));
+        }
+        for (Chat c in temp) {
+          cm.createChatController(c, active: cm.activeChat?.chat.guid == c.guid);
+        }
+        newChats.addAll(temp);
       }
-
-      for (Chat c in temp) {
-        cm.createChatController(c, active: cm.activeChat?.chat.guid == c.guid);
-      }
-      newChats.addAll(temp);
-      newChats.sort(Chat.sort);
-      chats.value = newChats;
-      loadedChatBatch.value = true;
     }
+
+    for (int i = 0; i < batches; i++) {
+      futures.add(kIsWeb
+          ? cm.getChats(withLastMessage: true, limit: batchSize, offset: i * batchSize)
+          : Chat.getChats(limit: batchSize, offset: i * batchSize));
+
+      if (futures.length >= maxConcurrent) {
+        final results = await Future.wait(futures);
+        await processResults(results);
+        futures.clear();
+      }
+    }
+
+    if (futures.isNotEmpty) {
+      final results = await Future.wait(futures);
+      await processResults(results);
+    }
+
+    newChats.sort(Chat.sort);
+    chats.value = newChats;
+    loadedChatBatch.value = true;
     loadedAllChats.complete();
     Logger.info("Finished fetching chats (${chats.length}).", tag: "ChatBloc");
     // update share targets
