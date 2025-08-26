@@ -49,4 +49,29 @@ void main() {
     final double fontSize = richText.text.style!.fontSize!;
     expect(size.height, greaterThan(fontSize * 1.5));
   });
+
+  testWidgets('Action text without spaces wraps instead of ellipsizing', (WidgetTester tester) async {
+    const String longText = '一二三四五六七八九十一二三四五六七八九十一二三四五六七八九十';
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: CupertinoAlertDialog(
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () {},
+              child: const Text(longText),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final Size size = tester.getSize(find.text(longText));
+    final RichText richText = tester.widget<RichText>(
+      find.descendant(of: find.text(longText), matching: find.byType(RichText)),
+    );
+    final double fontSize = richText.text.style!.fontSize!;
+    expect(richText.maxLines, isNull);
+    expect(richText.overflow, TextOverflow.visible);
+    expect(size.height, greaterThan(fontSize * 1.5));
+  });
 }
