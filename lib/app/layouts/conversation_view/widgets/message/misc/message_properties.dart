@@ -34,8 +34,44 @@ class _MessagePropertiesState extends CustomState<MessageProperties, void, Messa
     super.initState();
   }
 
-  List<TextSpan> getProperties() {
-    final properties = <TextSpan>[];
+  Future<void> _showEditHistory() async {
+    try {
+      final res = await http.editHistory(message.guid!);
+      final List<Message> edits =
+          (res.data as List).map((e) => Message.fromMap(e)).toList();
+
+      Get.dialog(
+        AlertDialog(
+          title: const Text('Edit History'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: edits.length,
+              itemBuilder: (context, i) {
+                final m = edits[i];
+                return ListTile(
+                  title: Text(m.fullText),
+                  subtitle: Text(buildDate(m.dateEdited ?? m.dateCreated)),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      showSnackbar('Error', 'Failed to load edit history');
+    }
+  }
+
+  List<InlineSpan> getProperties() {
+    final properties = <InlineSpan>[];
     final replyList = service.struct.threads(message.guid!, widget.part.part, returnOriginator: false);
     if (message.expressiveSendStyleId != null) {
       final effect = effectMap.entries.firstWhereOrNull((element) => element.value == message.expressiveSendStyleId)?.key ?? "unknown";
@@ -68,11 +104,16 @@ class _MessagePropertiesState extends CustomState<MessageProperties, void, Messa
       ));
     }
     if (widget.part.isEdited) {
-      properties.add(TextSpan(
-        text: "Edited",
-        recognizer: TapGestureRecognizer()..onTap = () {
-          controller.showEdits.toggle();
-        }
+      final style = context.theme.textTheme.labelSmall!
+          .copyWith(color: context.theme.colorScheme.primary, fontWeight: FontWeight.bold);
+      properties.add(WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: GestureDetector(
+          onTap: _showEditHistory,
+          onLongPress: _showEditHistory,
+          child: Text('Edited', style: style),
+        ),
       ));
     }
 

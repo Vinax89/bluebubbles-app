@@ -132,6 +132,8 @@ class HttpService extends GetxService {
   /// Get server metadata like server version, macOS version, current URL, etc
   Response? _serverInfoCache;
   DateTime? _lastServerInfoFetch;
+  Map<String, Response> _editHistoryCache = {};
+  Map<String, DateTime> _lastEditHistoryFetch = {};
   Future<Response> serverInfo({CancelToken? cancelToken}) async {
     final now = DateTime.now();
     if (_serverInfoCache != null && _lastServerInfoFetch != null && now.difference(_lastServerInfoFetch!) < const Duration(minutes: 1)) {
@@ -791,6 +793,32 @@ class HttpService extends GetxService {
           },
           cancelToken: cancelToken
       );
+      return returnSuccessOrError(response);
+    });
+  }
+
+  Future<Response> editHistory(String guid, {CancelToken? cancelToken, bool force = false}) async {
+    final now = DateTime.now();
+    if (!force &&
+        _editHistoryCache.containsKey(guid) &&
+        _lastEditHistoryFetch[guid] != null &&
+        now.difference(_lastEditHistoryFetch[guid]!) < const Duration(minutes: 5)) {
+      Logger.debug("Edit history cache hit for $guid");
+      return _editHistoryCache[guid]!;
+    }
+
+    return runApiGuarded(() async {
+      final response = await dio.get(
+        "$apiRoot/message/$guid/edits",
+        queryParameters: buildQueryParams(),
+        cancelToken: cancelToken,
+      );
+
+      if (response.statusCode == 200) {
+        _editHistoryCache[guid] = response;
+        _lastEditHistoryFetch[guid] = now;
+      }
+
       return returnSuccessOrError(response);
     });
   }
