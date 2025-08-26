@@ -330,3 +330,19 @@ msix_config:
   architecture: x64
   capabilities: internetClient, location, microphone, webcam
   protocol_activation: imessage
+
+dependency_overrides:
+  # Fixes broken plugin metadata that causes "dartPluginClass:linux" errors in CI
+  open_filex: ^4.6.0
+
+  # Supports the new *ThemeData types introduced by newer Flutter
+  flex_color_scheme: ^8.1.1
+
+  # Implements new Canvas APIs (clip/draw RSuperellipse) added in recent Flutter
+  skeletonizer: ^1.5.0
+
+  # Replaces removed hashValues() with Object.hash
+  flutter_slidable: ^3.1.2
+
+  # Gives you firstWhereOrNull extensions (used below)
+  collection: ^1.18.0
