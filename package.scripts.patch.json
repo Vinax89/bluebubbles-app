@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "prebuild": "npm run lint --if-present && npm run typecheck --if-present && npm test --if-present",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.46.0"
+  }
+}
