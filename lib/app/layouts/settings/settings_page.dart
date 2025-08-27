@@ -19,6 +19,7 @@ import 'package:bluebubbles/app/layouts/settings/pages/advanced/private_api_pane
 import 'package:bluebubbles/app/layouts/settings/pages/advanced/redacted_mode_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/server/server_management_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/scheduling/scheduled_messages_panel.dart';
+import 'package:bluebubbles/app/layouts/settings/accessibility/accessibility_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/widgets/settings_widgets.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/theming/theming_panel.dart';
 import 'package:bluebubbles/app/layouts/settings/pages/misc/troubleshoot_panel.dart';
@@ -341,6 +342,31 @@ class _SettingsPageState extends OptimizedState<SettingsPage> {
                                         iosIcon: CupertinoIcons.paintbrush_fill,
                                         materialIcon: Icons.palette,
                                         containerColor: Colors.blueGrey),
+                                  ),
+                                ],
+                              ),
+                              SettingsHeader(
+                                  iosSubtitle: iosSubtitle,
+                                  materialSubtitle: materialSubtitle,
+                                  text: "Accessibility"),
+                              SettingsSection(
+                                backgroundColor: tileColor,
+                                children: [
+                                  SettingsTile(
+                                    backgroundColor: tileColor,
+                                    title: "Accessibility Settings",
+                                    onTap: () {
+                                      ns.pushAndRemoveSettingsUntil(
+                                        context,
+                                        AccessibilityPanel(),
+                                        (route) => route.isFirst,
+                                      );
+                                    },
+                                    trailing: const NextButton(),
+                                    leading: const SettingsLeadingIcon(
+                                        iosIcon: CupertinoIcons.eye,
+                                        materialIcon: Icons.accessibility_new,
+                                        containerColor: Colors.purple),
                                   ),
                                 ],
                               ),

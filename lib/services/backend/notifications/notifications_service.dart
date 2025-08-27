@@ -24,6 +24,7 @@ import 'package:timezone/timezone.dart';
 import 'package:universal_html/html.dart' hide File, Platform, Navigator;
 import 'package:universal_io/io.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter/semantics.dart';
 
 NotificationsService notif = Get.isRegistered<NotificationsService>() ? Get.find<NotificationsService>() : Get.put(NotificationsService());
 
@@ -186,8 +187,9 @@ class NotificationsService extends GetxService {
     final guid = chat.guid;
     final contactName = message.handle?.displayName ?? "Unknown";
     final title = isGroup ? chat.getTitle() : contactName;
-    final text = hideContent ? "iMessage" : MessageHelper.getNotificationText(message);
-    final isReaction = !isNullOrEmpty(message.associatedMessageGuid);
+      final text = hideContent ? "iMessage" : MessageHelper.getNotificationText(message);
+      final isReaction = !isNullOrEmpty(message.associatedMessageGuid);
+      SemanticsService.announce('$title: $text', TextDirection.ltr);
     final personIcon = (await rootBundle.load("assets/images/person64.png")).buffer.asUint8List();
 
     Uint8List chatIcon = await avatarAsBytes(chat: chat, quality: 256);

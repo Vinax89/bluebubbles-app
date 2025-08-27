@@ -41,29 +41,34 @@ class SendButtonState extends OptimizedState<SendButton> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onSecondaryTap: () {
-        if (controller.isAnimating) {
-          controller.reset();
-        } else {
-          widget.onLongPress.call();
-        }
-      },
-      child: TextButton(
-        style: TextButton.styleFrom(
-          backgroundColor: iOS ? context.theme.colorScheme.primary : null,
-          shape: const CircleBorder(),
-          padding: const EdgeInsets.all(0),
-          maximumSize: const Size(32, 32),
-          minimumSize: const Size(32, 32),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: AnimatedBuilder(
-          animation: controller,
-          builder: (context, widget) {
-            return Container(
-              constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
-              decoration: BoxDecoration(
+      return GestureDetector(
+        onSecondaryTap: () {
+          if (controller.isAnimating) {
+            controller.reset();
+          } else {
+            widget.onLongPress.call();
+          }
+        },
+        child: FocusTraversalOrder(
+          order: const NumericFocusOrder(3.0),
+          child: Semantics(
+            label: 'Send message',
+            button: true,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: iOS ? context.theme.colorScheme.primary : null,
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(0),
+                maximumSize: const Size(32, 32),
+                minimumSize: const Size(32, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: AnimatedBuilder(
+                animation: controller,
+                builder: (context, widget) {
+                  return Container(
+                    constraints: const BoxConstraints(minHeight: 32, minWidth: 32),
+                    decoration: BoxDecoration(
                   shape: iOS ? BoxShape.circle : BoxShape.rectangle,
                   borderRadius: iOS ? null : BorderRadius.circular(10),
                   gradient: iOS || controller.value != 0
@@ -90,26 +95,28 @@ class SendButtonState extends OptimizedState<SendButton> with SingleTickerProvid
                 size: iOS || controller.value != 0 ? 20 : 28,
               ),
             );
-          },
+                },
+              ),
+              onPressed: () {
+                if (controller.isAnimating) {
+                  controller.reset();
+                } else if (ss.settings.sendDelay.value != 0) {
+                  controller.forward();
+                } else {
+                  HapticFeedback.lightImpact();
+                  widget.sendMessage.call();
+                }
+              },
+              onLongPress: () {
+                if (controller.isAnimating) {
+                  controller.reset();
+                } else {
+                  widget.onLongPress.call();
+                }
+              },
+            ),
+          ),
         ),
-        onPressed: () {
-          if (controller.isAnimating) {
-            controller.reset();
-          } else if (ss.settings.sendDelay.value != 0) {
-            controller.forward();
-          } else {
-            HapticFeedback.lightImpact();
-            widget.sendMessage.call();
-          }
-        },
-        onLongPress: () {
-          if (controller.isAnimating) {
-            controller.reset();
-          } else {
-            widget.onLongPress.call();
-          }
-        },
-      ),
-    );
+      );
   }
 }

@@ -112,12 +112,19 @@ class Main extends StatelessWidget {
           LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyI): const OpenChatDetailsIntent(),
           LogicalKeySet(LogicalKeyboardKey.escape): const GoBackIntent(),
         },
-        builder: (context, child) => SafeArea(
-          top: false,
-          bottom: false,
-          child: SecureApplication(
-            child: Builder(
-              builder: (context) {
+        builder: (context, child) => Obx(() {
+          final media = MediaQuery.of(context);
+          return SafeArea(
+            top: false,
+            bottom: false,
+            child: MediaQuery(
+              data: media.copyWith(
+                textScaler: TextScaler.linear(ss.settings.textScale.value),
+                highContrast: ss.settings.highContrast.value,
+              ),
+              child: SecureApplication(
+                child: Builder(
+                  builder: (context) {
                 if (ss.canAuthenticate && (!ls.isAlive || !StartupTasks.uiReady.isCompleted)) {
                   if (ss.settings.shouldSecure.value) {
                     SecureApplicationProvider.of(context, listen: false)!.lock();
@@ -204,6 +211,8 @@ class Main extends StatelessWidget {
             ),
           ),
         ),
+      );
+    }),
         defaultTransition: Transition.cupertino,
       ),
     );

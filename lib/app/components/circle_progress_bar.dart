@@ -112,25 +112,29 @@ class CircleProgressBarState extends OptimizedState<CircleProgressBar> with Sing
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: AnimatedBuilder(
-        animation: curve,
-        child: Container(),
-        builder: (context, child) {
-          final backgroundColor = backgroundColorTween?.evaluate(curve) ?? widget.backgroundColor;
-          final foregroundColor = foregroundColorTween?.evaluate(curve) ?? widget.foregroundColor;
+    return Semantics(
+      label: 'Progress ${(widget.value * 100).round()}%',
+      value: '${(widget.value * 100).round()}%',
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: AnimatedBuilder(
+          animation: curve,
+          child: Container(),
+          builder: (context, child) {
+            final backgroundColor = backgroundColorTween?.evaluate(curve) ?? widget.backgroundColor;
+            final foregroundColor = foregroundColorTween?.evaluate(curve) ?? widget.foregroundColor;
 
-          return CustomPaint(
-            child: child,
-            foregroundPainter: CircleProgressBarPainter(
-              strokeWidth: 4,
-              backgroundColor: backgroundColor,
-              foregroundColor: foregroundColor,
-              percentage: valueTween!.evaluate(curve),
-            ),
-          );
-        },
+            return CustomPaint(
+              child: child,
+              foregroundPainter: CircleProgressBarPainter(
+                strokeWidth: 4,
+                backgroundColor: backgroundColor,
+                foregroundColor: foregroundColor,
+                percentage: valueTween!.evaluate(curve),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
