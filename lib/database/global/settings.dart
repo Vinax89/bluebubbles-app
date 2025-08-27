@@ -40,6 +40,8 @@ class Settings {
   final RxBool colorfulBubbles = false.obs;
   final RxBool hideDividers = false.obs;
   final RxDouble scrollVelocity = 1.00.obs;
+  final RxDouble textScale = 1.0.obs;
+  final RxBool highContrast = false.obs;
   final RxBool sendWithReturn = false.obs;
   final RxBool doubleTapForDetails = false.obs;
   final RxBool denseChatTiles = false.obs;
@@ -309,6 +311,8 @@ class Settings {
       'colorfulBubbles': colorfulBubbles.value,
       'hideDividers': hideDividers.value,
       'scrollVelocity': scrollVelocity.value,
+      'textScale': textScale.value,
+      'highContrast': highContrast.value,
       'sendWithReturn': sendWithReturn.value,
       'doubleTapForDetails': doubleTapForDetails.value,
       'denseChatTiles': denseChatTiles.value,
@@ -449,6 +453,8 @@ class Settings {
     ss.settings.colorfulBubbles.value = map['colorfulBubbles'] ?? false;
     ss.settings.hideDividers.value = map['hideDividers'] ?? false;
     ss.settings.scrollVelocity.value = map['scrollVelocity']?.toDouble() ?? 1;
+    ss.settings.textScale.value = map['textScale']?.toDouble() ?? 1.0;
+    ss.settings.highContrast.value = map['highContrast'] ?? false;
     ss.settings.sendWithReturn.value = map['sendWithReturn'] ?? false;
     ss.settings.doubleTapForDetails.value = map['doubleTapForDetails'] ?? false;
     ss.settings.denseChatTiles.value = map['denseChatTiles'] ?? false;
@@ -595,6 +601,8 @@ class Settings {
     s.colorfulBubbles.value = map['colorfulBubbles'] ?? false;
     s.hideDividers.value = map['hideDividers'] ?? false;
     s.scrollVelocity.value = map['scrollVelocity']?.toDouble() ?? 1;
+    s.textScale.value = map['textScale']?.toDouble() ?? 1.0;
+    s.highContrast.value = map['highContrast'] ?? false;
     s.sendWithReturn.value = map['sendWithReturn'] ?? false;
     s.doubleTapForDetails.value = map['doubleTapForDetails'] ?? false;
     s.denseChatTiles.value = map['denseChatTiles'] ?? false;
