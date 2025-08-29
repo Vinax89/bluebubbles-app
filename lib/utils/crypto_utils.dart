@@ -6,40 +6,32 @@ import 'package:pointycastle/export.dart';
 import 'package:tuple/tuple.dart';
 
 String encryptAES(String plainText, String passphrase) {
-  try {
-    final salt = genRandomWithNonZero(16);
-    var keyndIV = deriveKeyAndIV(passphrase, salt);
-    final key = keyndIV.item1;
-    final iv = keyndIV.item2.sublist(0, 12);
+  final salt = genRandomWithNonZero(16);
+  var keyndIV = deriveKeyAndIV(passphrase, salt);
+  final key = keyndIV.item1;
+  final iv = keyndIV.item2.sublist(0, 12);
 
-    final cipher = GCMBlockCipher(AESEngine());
-    cipher.init(true, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
-    final encrypted = cipher.process(Uint8List.fromList(utf8.encode(plainText)));
-    Uint8List encryptedBytesWithSalt =
-        Uint8List.fromList(createUint8ListFromString("Salted__") + salt + encrypted);
-    return base64.encode(encryptedBytesWithSalt);
-  } catch (error) {
-    rethrow;
-  }
+  final cipher = GCMBlockCipher(AESEngine());
+  cipher.init(true, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
+  final encrypted = cipher.process(Uint8List.fromList(utf8.encode(plainText)));
+  Uint8List encryptedBytesWithSalt =
+      Uint8List.fromList(createUint8ListFromString("Salted__") + salt + encrypted);
+  return base64.encode(encryptedBytesWithSalt);
 }
 
 String decryptAES(String encrypted, String passphrase) {
-  try {
-    Uint8List encryptedBytesWithSalt = base64.decode(encrypted);
+  Uint8List encryptedBytesWithSalt = base64.decode(encrypted);
 
-    Uint8List encryptedBytes = encryptedBytesWithSalt.sublist(24, encryptedBytesWithSalt.length);
-    final salt = encryptedBytesWithSalt.sublist(8, 24);
-    var keyndIV = deriveKeyAndIV(passphrase, salt);
-    final key = keyndIV.item1;
-    final iv = keyndIV.item2.sublist(0, 12);
+  Uint8List encryptedBytes = encryptedBytesWithSalt.sublist(24, encryptedBytesWithSalt.length);
+  final salt = encryptedBytesWithSalt.sublist(8, 24);
+  var keyndIV = deriveKeyAndIV(passphrase, salt);
+  final key = keyndIV.item1;
+  final iv = keyndIV.item2.sublist(0, 12);
 
-    final cipher = GCMBlockCipher(AESEngine());
-    cipher.init(false, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
-    final decrypted = cipher.process(encryptedBytes);
-    return utf8.decode(decrypted);
-  } catch (error) {
-    rethrow;
-  }
+  final cipher = GCMBlockCipher(AESEngine());
+  cipher.init(false, AEADParameters(KeyParameter(key), 128, iv, Uint8List(0)));
+  final decrypted = cipher.process(encryptedBytes);
+  return utf8.decode(decrypted);
 }
 
 Tuple2<Uint8List, Uint8List> deriveKeyAndIV(String passphrase, Uint8List salt) {
@@ -58,7 +50,10 @@ Uint8List createUint8ListFromString(String s) {
 
 Uint8List genRandomWithNonZero(int seedLength) {
   final random = Random.secure();
-  const int randomMax = 245;
+  // Generate bytes in the range 1-255 to avoid zero values.
+  // `randomMax` defines the upper bound for `nextInt` (exclusive),
+  // so setting it to 255 yields values up to 255 after adding 1.
+  const int randomMax = 255;
   final Uint8List uint8list = Uint8List(seedLength);
   for (int i = 0; i < seedLength; i++) {
     uint8list[i] = random.nextInt(randomMax) + 1;
