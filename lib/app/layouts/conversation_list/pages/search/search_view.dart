@@ -44,7 +44,7 @@ class SearchView extends StatefulWidget {
 }
 
 class SearchViewState extends OptimizedState<SearchView> {
-  final TextEditingController textEditingController = TextEditingController();
+  final SearchController searchController = SearchController();
   final PanelController panelController = PanelController();
   final FocusNode focusNode = FocusNode();
   final List<SearchResult> pastSearches = [];
@@ -74,8 +74,8 @@ class SearchViewState extends OptimizedState<SearchView> {
     super.initState();
 
     // When the user types again after no results, reset no results
-    textEditingController.addListener(() {
-      if (textEditingController.text != currentSearchTerm && noResults) {
+    searchController.addListener(() {
+      if (searchController.text != currentSearchTerm && noResults) {
         noResults = false;
       }
     });
@@ -334,63 +334,74 @@ class SearchViewState extends OptimizedState<SearchView> {
                     padding: const EdgeInsets.only(left: 15, right: 15, top: 5),
                     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                       Flexible(
-                          child: CupertinoTextField(
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) {
-                          search(textEditingController.text);
-                        },
-                        focusNode: focusNode,
-                        padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10),
-                        controller: textEditingController,
-                        placeholder: "Enter a search term...",
-                        style: context.theme.textTheme.bodyLarge,
-                        placeholderStyle:
-                            context.theme.textTheme.bodyLarge!.copyWith(color: context.theme.colorScheme.outline),
-                        cursorColor: context.theme.colorScheme.primary,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: context.theme.colorScheme.primary),
-                        ),
-                        maxLines: 1,
-                        prefix: Padding(
-                          padding: const EdgeInsets.only(left: 15),
-                          child: Icon(ss.settings.skin.value == Skins.iOS ? CupertinoIcons.search : Icons.search,
-                              color: context.theme.colorScheme.outline),
-                        ),
-                        suffix: Padding(
-                          padding: const EdgeInsets.only(right: 15),
-                          child: !isSearching
-                              ? InkWell(
-                                  child: Icon(Icons.arrow_forward, color: context.theme.colorScheme.primary),
-                                  onTap: () {
-                                    search(textEditingController.text);
-                                  })
-                              : Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: ss.settings.skin.value == Skins.iOS
-                                      ? Theme(
-                                          data: ThemeData(
-                                            cupertinoOverrideTheme: CupertinoThemeData(
-                                                brightness: ThemeData.estimateBrightnessForColor(
-                                                    context.theme.colorScheme.background)),
-                                          ),
-                                          child: const CupertinoActivityIndicator(),
+                        child: ss.settings.skin.value == Skins.iOS
+                            ? CupertinoSearchTextField(
+                                controller: searchController,
+                                focusNode: focusNode,
+                                placeholder: "Enter a search term...",
+                                style: Theme.of(context).textTheme.bodyLarge,
+                                placeholderStyle: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge!
+                                    .copyWith(color: Theme.of(context).colorScheme.outline),
+                                onChanged: (val) => search(val),
+                                onSubmitted: (val) => search(val),
+                                suffix: Padding(
+                                  padding: const EdgeInsets.only(right: 15),
+                                  child: !isSearching
+                                      ? InkWell(
+                                          child: Icon(Icons.arrow_forward,
+                                              color: Theme.of(context).colorScheme.primary),
+                                          onTap: () => search(searchController.text),
                                         )
-                                      : Container(
-                                          height: 20,
-                                          width: 20,
-                                          child: Center(
+                                      : const Padding(
+                                          padding: EdgeInsets.all(12.0),
+                                          child: CupertinoActivityIndicator(),
+                                        ),
+                                ),
+                                suffixMode: OverlayVisibilityMode.editing,
+                              )
+                            : SearchAnchor(
+                                searchController: searchController,
+                                suggestionsBuilder: (context, controller) => const [],
+                                builder: (context, controller) {
+                                  final colorScheme = Theme.of(context).colorScheme;
+                                  return SearchBar(
+                                    controller: controller,
+                                    focusNode: focusNode,
+                                    hintText: "Enter a search term...",
+                                    onChanged: (val) => search(val),
+                                    onSubmitted: (val) => search(val),
+                                    leading: Icon(Icons.search, color: colorScheme.outline),
+                                    trailing: [
+                                      if (!isSearching)
+                                        IconButton(
+                                          icon: Icon(Icons.arrow_forward, color: colorScheme.primary),
+                                          onPressed: () => search(controller.text),
+                                        )
+                                      else
+                                        Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: SizedBox(
+                                            height: 20,
+                                            width: 20,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
                                               valueColor:
-                                                  AlwaysStoppedAnimation<Color>(context.theme.colorScheme.primary),
+                                                  AlwaysStoppedAnimation<Color>(colorScheme.primary),
                                             ),
                                           ),
                                         ),
-                                ),
-                        ),
-                        suffixMode: OverlayVisibilityMode.editing,
-                      )),
+                                    ],
+                                    backgroundColor: MaterialStatePropertyAll(colorScheme.surface),
+                                    hintStyle: MaterialStatePropertyAll(
+                                        Theme.of(context).textTheme.bodyLarge!.copyWith(color: colorScheme.outline)),
+                                    textStyle:
+                                        MaterialStatePropertyAll(Theme.of(context).textTheme.bodyLarge),
+                                  );
+                                },
+                              ),
+                      ),
                       Container(
                           margin: const EdgeInsets.only(left: 10),
                           width: 35,
