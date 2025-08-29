@@ -29,7 +29,10 @@ class WindowEffects {
 
   static List<WindowEffect> get effects =>
       _effects.where((effect) {
-        int version = parsedWindowsVersion();
+        int? version = parsedWindowsVersion();
+        if (version == null) {
+          return _versions[effect]!.item1 == 0;
+        }
         return version >= _versions[effect]!.item1! &&
             (_versions[effect]!.item2 == null || (version <= _versions[effect]!.item2!));
       }).toList();
@@ -103,7 +106,7 @@ class WindowEffects {
     if (!effects.contains(effect)) ss.settings.windowEffect.value = WindowEffect.disabled;
     ss.saveSettings(ss.settings);
 
-    bool supportsTransparentAcrylic = parsedWindowsVersion() >= 22000;
+    bool supportsTransparentAcrylic = (parsedWindowsVersion() ?? 0) >= 22000;
     bool addOpacity = ss.settings.windowEffect.value == WindowEffect.acrylic && !supportsTransparentAcrylic;
 
     // withOpacity uses withAlpha((255.0 * opacity).round());
@@ -118,7 +121,9 @@ class WindowEffects {
   }
 }
 
-int parsedWindowsVersion() {
-  String raw = Platform.operatingSystemVersion;
-  return int.tryParse(raw.substring(raw.indexOf("Build") + 6, raw.length - 1)) ?? 0;
+int? parsedWindowsVersion([String? raw]) {
+  raw ??= Platform.operatingSystemVersion;
+  final match = RegExp(r'Build\s*(\d+)').firstMatch(raw);
+  if (match == null) return null;
+  return int.tryParse(match.group(1)!);
 }
