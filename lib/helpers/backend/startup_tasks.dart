@@ -8,6 +8,7 @@ import 'package:bluebubbles/database/database.dart';
 import 'package:bluebubbles/services/services.dart';
 import 'package:bluebubbles/utils/logger/logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:on_exit/init.dart';
 import 'package:app_install_date/app_install_date.dart';
@@ -74,6 +75,9 @@ class StartupTasks {
 
     await notif.init();
     await intents.init();
+
+    // Register custom service for dependency injection
+    Get.lazyPut<CustomService>(() => CustomService());
   }
 
   static Future<void> initIsolateServices() async {
