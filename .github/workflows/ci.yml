@@ -27,6 +27,14 @@ jobs:
           flutter pub upgrade --major-versions
           flutter pub get
 
+      - name: Build generated files
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Ensure generated files are committed
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
       - name: Analyze
         run: flutter analyze
 
