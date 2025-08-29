@@ -419,7 +419,8 @@ class MessagesViewState extends OptimizedState<MessagesView> {
                                       ? Padding(
                                           padding: EdgeInsets.only(top: iOS ? 8.0 : 0.0, right: 5),
                                           child: SizedBox(
-                                            height: context.theme.extension<BubbleText>()!.bubbleText.fontSize! + 35,
+                                            height: MediaQuery.of(context).textScaler.scale(
+                                                context.theme.extension<BubbleText>()!.bubbleText.fontSize! + 35),
                                             child: ListView(
                                               scrollDirection: Axis.horizontal,
                                               reverse: true,

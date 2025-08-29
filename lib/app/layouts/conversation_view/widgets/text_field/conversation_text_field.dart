@@ -983,7 +983,8 @@ class TextFieldComponentState extends State<TextFieldComponent> {
                     enableIMEPersonalizedLearning: !ss.settings.incognitoKeyboard.value,
                     textInputAction: TextInputAction.next,
                     cursorColor: context.theme.colorScheme.primary,
-                    cursorHeight: context.theme.extension<BubbleText>()!.bubbleText.fontSize! * 1.25,
+                    cursorHeight: MediaQuery.of(context).textScaler.scale(
+                        context.theme.extension<BubbleText>()!.bubbleText.fontSize! * 1.25),
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.all(iOS && !kIsDesktop && !kIsWeb ? 10 : 12.5),
                       isDense: true,
@@ -1028,7 +1029,8 @@ class TextFieldComponentState extends State<TextFieldComponent> {
                   enableIMEPersonalizedLearning: !ss.settings.incognitoKeyboard.value,
                   textInputAction: ss.settings.sendWithReturn.value && !kIsWeb && !kIsDesktop ? TextInputAction.send : TextInputAction.newline,
                   cursorColor: context.theme.colorScheme.primary,
-                  cursorHeight: context.theme.extension<BubbleText>()!.bubbleText.fontSize! * 1.25,
+                  cursorHeight: MediaQuery.of(context).textScaler.scale(
+                      context.theme.extension<BubbleText>()!.bubbleText.fontSize! * 1.25),
                   decoration: InputDecoration(
                     contentPadding: EdgeInsets.all(iOS && !kIsDesktop && !kIsWeb ? 10 : 12.5),
                     isDense: true,

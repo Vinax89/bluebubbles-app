@@ -225,7 +225,7 @@ class _PickedAttachmentsHolderState extends OptimizedState<PickedAttachmentsHold
                                     ContactAvatarWidget(
                                       handle: widget.controller!.mentionMatches[index].handle,
                                       size: 25,
-                                      fontSize: 15,
+                                      fontSize: MediaQuery.of(context).textScaler.scale(15),
                                       borderThickness: 0,
                                     ),
                                     const SizedBox(width: 12),
