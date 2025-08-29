@@ -22,10 +22,8 @@ jobs:
           flutter --version
           dart --version
 
-      - name: Pub upgrade & get
-        run: |
-          flutter pub upgrade --major-versions
-          flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Analyze
         run: flutter analyze
